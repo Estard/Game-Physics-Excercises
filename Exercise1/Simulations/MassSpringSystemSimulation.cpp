@@ -1,6 +1,9 @@
 #include "MassSpringSystemSimulator.h"
 
+#include<iostream>
 #include<vector>
+#include<string>
+#include<sstream>
 
 struct MassPoint
 {
@@ -14,6 +17,33 @@ struct Spring
     float initialLength;
 };
 
+std::string vec3ToString(Vec3 &v)
+{
+    std::stringstream ss;
+    ss << v.x << ' ' << v.y <<' ' << v.z;
+    return ss.str();
+}
+
+std::string massPointToString(MassPoint &ms)
+{
+ std::stringstream ss;
+ ss << "Mass Point, isFixed : " << ms.isFixed;
+ ss << "\nPosition: "<<vec3ToString(ms.position);
+ ss << "\nVelocity: "<<vec3ToString(ms.velocity);
+ return ss.str();
+}
+
+std::string springToString(Spring &s)
+{
+    std::stringstream ss;
+    ss << "String initial length: "<<s.initialLength;
+    ss << "\nMassPoint1:\n"<<massPointToString(s.massPoint1);
+    ss << "\nMassPoint2:\n"<<massPointToString(s.massPoint2);
+    return ss.str();
+    
+
+}
+
 std::vector<MassPoint> massPoints;
 std::vector<Spring> springs;
 
@@ -24,6 +54,20 @@ MassSpringSystemSimulator::MassSpringSystemSimulator()
 	 m_fStiffness = 1.;
 	 m_fDamping = 0.;
 }
+
+void EulerIntegration(MassPoint &ms,float timestep)
+{
+    ms.position += timestep*ms.velocity;
+    ms.velocity += ms.force*(timestep/m_fMass);
+}
+
+void MidPointIntegration(MassPoint &ms,float timestep)
+{
+    ms.position += timestep*ms.velocity;
+    ms.velocity += ms.force*(timestep/m_fMass);
+}
+
+
  
 
 void MassSpringSystemSimulator::simulateTimestep(float timeStep);
@@ -35,6 +79,7 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep);
 
     //Apply Forces
     for(auto &s : springs){
+        std::cout << springToString(s);
         MassPoint &m1 = massPoints[s.massPoint1];
         MassPoint &m2 = massPoints[s.massPoint1];
         if(m1.isFixed&&m2.isFixed)
@@ -48,31 +93,37 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep);
             m1.force += totalForce*(m2.position-m1.position);
         }
         else{
-            m1.force += .5*totalForce*(m2.position-m1.position);
-            m2.force += .5*totalForce*(m1.position-m2.position);
+            m1.force += totalForce*(m2.position-m1.position);
+            m2.force += totalForce*(m1.position-m2.position);
         }
     }
 
-
+    //Integrate based on Method
     switch (methode)
     {
     case EULER:
-
         for(auto &ms : massPoints){
-            ms.position += timeStep*ms.velocity;
-            ms.velocity += ms.force*(timestep/m_fMass);
-            //Collision with GroundPlane
-            if(ms.position<0){
-                ms.position = 0;
-                ms.velocity.z = 0; //*= -1 für bounciness
-            }
+           EulerIntegration(ms,timeStep);
         }
         break;
     case MIDPOINT:
+        for(auto &ms : massPoints){
+           MidPointIntegration(ms,timeStep);
+        }
         break;
     default:
         break;
     }
+#if 0
+      //Collision with GroundPlane
+    if(ms.position<0){
+        ms.position = 0;
+        ms.velocity.z = 0; //*= -1 für bounciness
+    }
+#endif
+
+    for(auto &s : springs){
+        std::cout <<"\nUpdates Springs: " <<springToString(s);
 }
 
 
