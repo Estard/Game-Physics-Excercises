@@ -10,6 +10,7 @@ struct MassPoint
     Vec3 position,velocity;
     bool isFixed;
     Vec3 force;
+    float mass;
 };
 struct Spring
 {
@@ -58,13 +59,13 @@ MassSpringSystemSimulator::MassSpringSystemSimulator()
 void EulerIntegration(MassPoint &ms,float timestep)
 {
     ms.position += timestep*ms.velocity;
-    ms.velocity += ms.force*(timestep/m_fMass);
+    ms.velocity += ms.force*(timestep/ms.mass);
 }
 
 void MidPointIntegration(MassPoint &ms,float timestep)
 {
     ms.position += timestep*ms.velocity;
-    ms.velocity += ms.force*(timestep/m_fMass);
+    ms.velocity += ms.force*(timestep/ms.mass);
 }
 
 
@@ -142,7 +143,7 @@ void MassSpringSystemSimulator::setDampingFactor(float damping)
 }
 int MassSpringSystemSimulator::addMassPoint(Vec3 position, Vec3 Velocity, bool isFixed)
 {
-    MassPoint mp = {position,Velocity,isFixed,Vec3()};
+    MassPoint mp = {position,Velocity,isFixed,Vec3(),m_fMass};
     massPoints.push_back(mp);
 }
 void MassSpringSystemSimulator::addSpring(int masspoint1, int masspoint2, float initialLength)
