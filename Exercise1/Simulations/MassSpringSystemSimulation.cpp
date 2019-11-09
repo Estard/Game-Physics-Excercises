@@ -16,6 +16,7 @@ struct Spring
 {
     int massPoint1,massPoint2;
     float initialLength;
+    float stiffness;
 };
 
 std::string vec3ToString(Vec3 &v)
@@ -56,6 +57,8 @@ MassSpringSystemSimulator::MassSpringSystemSimulator()
 	 m_fDamping = 0.;
 }
 
+
+/*DEPRECATED
 void EulerIntegration(MassPoint &ms,float timestep)
 {
     ms.position += timestep*ms.velocity;
@@ -67,50 +70,71 @@ void MidPointIntegration(MassPoint &ms,float timestep)
     ms.position += timestep*ms.velocity;
     ms.velocity += ms.force*(timestep/ms.mass);
 }
+*/
 
+
+void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoints);
+{
+    //Clear Forces
+     for(auto &mp : massPoints)
+            mp.force = Vec3();
+    
+    //Spring Forces
+    for(auto &s: springs){
+        MassPoint &m1 = massPoints[s.massPoint1];
+        MassPoint &m2 = massPoints[s.massPoint1];
+        float lengthDif = distance(m1.postion,m2.position)-s.initialLength;
+        float totalForce = s.stiffness*lengthDif;
+        Vec3 dir = m2.position-m1.position;
+        normalize(dir);
+        if(!m1.isFixed)
+            m1.force += dir*force;
+        if(!m2.isFixed)
+            m2.force -= dir*force;
+    }
+}
+
+void EulerIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep)
+{
+    for(auto &ms: mps)
+    {
+        ms.position += timestep*ms.velocity;
+        ms.velocity += ms.force*(timestep/ms.mass);
+    }
+}
+
+void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep)
+{
+    std::vector<Spring> tmpSprings = springs;
+    std::vector<MassPoint> tmpMassPoints = mps;
+
+    EulerIntegration(tmpSprings,tmpMassPoints,timestep*.5);
+    applyForces(tmpSprings,tmpMassPoints);
+    for(size_t i = 0; i < mps.size();i++){
+        mps[i].position += timestep*tmpMassPoints[i].velocity;
+        mps[i].velocity += timestep*tmpMassPoints[i].force/mps[i].mass;
+    }
+    
+}
 
  
 
 void MassSpringSystemSimulator::simulateTimestep(float timeStep);
 {
-    for(auto &mp : massPoints){
-            mp.force = Vec3();//Clear Forces
-            //TODO: Gravity;
-        }
+    for(auto &s : springs){
+        std::cout <<"\nInitialSprings: " <<springToString(s);
 
     //Apply Forces
-    for(auto &s : springs){
-        std::cout << springToString(s);
-        MassPoint &m1 = massPoints[s.massPoint1];
-        MassPoint &m2 = massPoints[s.massPoint1];
-        if(m1.isFixed&&m2.isFixed)
-            continue;
-        float lengthDif = distance(m1.postion,m2.position)-s.initialLength;
-        float totalForce = m_fStiffness*lengthDif;
-        if(m1.isFixed){
-            m2.force += totalForce*(m1.position-m2.position);
-        }
-        else if(m2.isFixed){
-            m1.force += totalForce*(m2.position-m1.position);
-        }
-        else{
-            m1.force += totalForce*(m2.position-m1.position);
-            m2.force += totalForce*(m1.position-m2.position);
-        }
-    }
+    applyForces(springs,masspoints,m_fDamping);
 
     //Integrate based on Method
     switch (methode)
     {
     case EULER:
-        for(auto &ms : massPoints){
-           EulerIntegration(ms,timeStep);
-        }
+       EulerIntegration(springs,masspoints,timestep);
         break;
     case MIDPOINT:
-        for(auto &ms : massPoints){
-           MidPointIntegration(ms,timeStep);
-        }
+        MidpointIntegration(springs,masspoints,timestep);
         break;
     default:
         break;
@@ -139,6 +163,8 @@ void MassSpringSystemSimulator::setMass(float mass)
 void MassSpringSystemSimulator::setStiffness(float stiffness)
 {
     m_fStiffness = stiffness;
+    for(auto &s : springs)
+        s.stiffness = m_fStiffness;
 }
 void MassSpringSystemSimulator::setDampingFactor(float damping)
 {
@@ -151,7 +177,7 @@ int MassSpringSystemSimulator::addMassPoint(Vec3 position, Vec3 Velocity, bool i
 }
 void MassSpringSystemSimulator::addSpring(int masspoint1, int masspoint2, float initialLength)
 {
-    Spring s = {masspoint1,masspoint2,initialLength};
+    Spring s = {masspoint1,masspoint2,initialLength, m_fStiffness};
     springs.push_back(s);
 }
 int MassSpringSystemSimulator::getNumberOfMassPoints()
