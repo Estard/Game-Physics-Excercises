@@ -132,6 +132,9 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep);
 void MassSpringSystemSimulator::setMass(float mass)
 {
     m_fMass = mass;
+    for(auto &ms: massPoints)
+        ms.mass = m_fMass;
+
 }
 void MassSpringSystemSimulator::setStiffness(float stiffness)
 {
