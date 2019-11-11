@@ -276,8 +276,12 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			{
 				DUC->drawSphere(mp.position,Vec3(.05,.05,.05));
 			}
-		
-			
-			
+			for(auto &s: springs)
+			{
+				DUC->beginLine();
+				DUC->drawLine(massPoints[s.massPoint1].position,Vec3(0.,1.,1.),
+				massPoints[s.massPoint2].position,Vec3(0.,1.,1.));
+				DUC->endLine();
+			}
 		}
 	
