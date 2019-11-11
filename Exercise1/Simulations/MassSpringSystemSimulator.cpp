@@ -22,9 +22,12 @@ struct Spring
 
 std::vector<MassPoint> massPoints;
 std::vector<Spring> springs;
+std::vector<Vec3> leap;
 int methode = EULER;
 float internTimestep = -1;
 bool gravitation = false;
+bool collision = false;
+float bounciness = 0.0;
 
 std::string vec3ToString(Vec3 &v)
 {
@@ -104,8 +107,17 @@ void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mp
 			mps[i].position += timestep * tmpMassPoints[i].velocity;
 			mps[i].velocity += timestep * tmpMassPoints[i].force / mps[i].mass;
 		}
-    }
-    
+    }    
+}
+void LeapFrogIntegration(std::vector<Spring>& springs, std::vector<MassPoint>& mps, float timestep, float damping) 
+{
+	for (int i = 0; i < mps.size(); i++)
+	{
+		mps[i].velocity = mps[i].force * (timestep / mps[i].mass) + leap[i];
+		if(!mps[i].isFixed)
+			mps[i].position += timestep * mps[i].velocity;
+		leap[i] = mps[i].velocity;
+	}
 }
 
  
@@ -115,28 +127,44 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 	if(!(internTimestep < 0) )
 		timeStep = internTimestep;
 	//Apply Forces
-	//TODO: m_fDamping
 	applyForces(springs, massPoints, m_fDamping);
 	
 	//Integrate based on Method
 	switch (methode)
 	{
 	case EULER:
+		leap.clear();
 		EulerIntegration(springs, massPoints, timeStep);
 		break;
 	case MIDPOINT:
+		leap.clear();
 		MidpointIntegration(springs, massPoints, timeStep, m_fDamping);
+		break;
+	case LEAPFROG:
+		if (leap.size() == 0) {
+			for (auto& ms : massPoints)
+			{
+				leap.push_back(ms.velocity);
+			}
+		}
+		LeapFrogIntegration(springs, massPoints, timeStep, m_fDamping);
 		break;
 	default:
 		break;
 	}
-#if 0
 	//Collision with GroundPlane
-	if (ms.position < 0) {
-		ms.position = 0;
-		ms.velocity.z = 0; //*= -1 für bounciness
+	if (collision)
+	{
+		for (int i = 0; i<getNumberOfMassPoints(); i++)
+		{
+			if (massPoints[i].position.y < -1) {
+				massPoints[i].position.y = -1;
+				massPoints[i].velocity.y *= -bounciness; //*= -1 für bounciness
+				if(methode == LEAPFROG)
+					leap[i].y *= -bounciness;
+			}
+		}
 	}
-#endif
 	for (auto &s : springs) {
 		std::cout << "Updates Springs: " << springToString(s) << std::endl;
 	}
@@ -164,7 +192,7 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 		{
 			MassPoint mp = { position,Velocity,isFixed,Vec3(),m_fMass };
 			massPoints.push_back(mp);
-			return massPoints.size() -1;
+			return getNumberOfMassPoints() -1;
 		}
 		void MassSpringSystemSimulator::addSpring(int masspoint1, int masspoint2, float initialLength)
 		{
@@ -230,7 +258,7 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 
 		const char* MassSpringSystemSimulator::getTestCasesStr()
 		{
-			return "Demo1,Demo2,Demo3,Demo4, Demo5";
+			return "Demo1,Demo2,Demo3,Demo4,Demo5";
 		}
 
 
@@ -244,6 +272,7 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			setMass(10);
 			setStiffness(40);
 			gravitation = false;
+			collision = false;
 			if(m_iTestCase < 3){
 				int m0 = addMassPoint(Vec3(0, 0, 0), Vec3(1, 0, 0), false);
 				int m1 = addMassPoint(Vec3(0, 2, 0), Vec3(-1, 0, 0), false);
@@ -251,27 +280,30 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			}
 			else if(m_iTestCase == 3)
 			{
-				addMassPoint(Vec3(0, 0, 0), Vec3(0, -1, 0), false);
-				addMassPoint(Vec3(1, 0, 0), Vec3(1, 0, 0), false);
-				addMassPoint(Vec3(0, 1, 0), Vec3(0, 0, -1), false);
-				addMassPoint(Vec3(1, 1, 0), Vec3(-1, 0, 0), false);
-				addMassPoint(Vec3(0, 0, 1), Vec3(0, 0, 1), false);
-				addMassPoint(Vec3(2, 3, 0), Vec3(1, 0, 0), false);
-				addMassPoint(Vec3(1, 0, 5), Vec3(), false);
-				addMassPoint(Vec3(2, 2, 1), Vec3(1, 0, 0), false);
-				addMassPoint(Vec3(2, 3, 1), Vec3(0, 3, 0), false);
-				addMassPoint(Vec3(2, 3, 2), Vec3(), true);
+				addMassPoint(Vec3(-4, 2, 0), Vec3(0, -1, 0), false);
+				addMassPoint(Vec3(-3, 2, 0), Vec3(1, 0, 0), false);
+				addMassPoint(Vec3(-2, 2, 0), Vec3(0, 0, -1), false);
+				addMassPoint(Vec3(-3, 0, 0), Vec3(-1, 0, 0), false);
+				addMassPoint(Vec3(-1, 2, 0), Vec3(0, 0, 1), false);
+				addMassPoint(Vec3(-1, 0, 0), Vec3(1, 0, 0), false);
+				addMassPoint(Vec3(1, 0, 0), Vec3(), false);
+				addMassPoint(Vec3(1, 2, 0), Vec3(1, 0, 0), false);
+				addMassPoint(Vec3(2, 0, 0), Vec3(0, 3, 0), false);
+				addMassPoint(Vec3(2, 2, 0), Vec3(), true);
+				addMassPoint(Vec3(3, 0, 0), Vec3(), false);
+				addMassPoint(Vec3(4, 2, 0), Vec3(), false);
+				addMassPoint(Vec3(4, 0, 0), Vec3(), false);
 
-				addSpring(0, 1, 1);
-				addSpring(1, 2, 3);
+				addSpring(0, 1, 0.5);
+				addSpring(1, 2, 0.5);
 				addSpring(1, 3, 1);
-				addSpring(3, 4, 5);
-				addSpring(1, 6, 2);
-				addSpring(4, 5, 2);
-				addSpring(6, 2, 3);
-				addSpring(4, 6, 1);
+				addSpring(4, 5, 1);
+				addSpring(5, 6, 1);
+				addSpring(6, 7, 1);
 				addSpring(8, 9, 1);
-				addSpring(7, 8, 1);
+				addSpring(9, 10, 1);
+				addSpring(10, 11, 1);
+				addSpring(11, 12, 1);
 			}
 			else
 			{
@@ -300,6 +332,8 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 					TwAddVarRW(DUC->g_pTweakBar, "Simulation Methode", TW_TYPE_INT32, &methode, "min=0 max=2");
 					TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_BOOLCPP, &gravitation, "");
 					TwAddVarRW(DUC->g_pTweakBar, "Damping", TW_TYPE_FLOAT, &m_fDamping, "min=0.0 max=1.0");
+					TwAddVarRW(DUC->g_pTweakBar, "Collision", TW_TYPE_BOOLCPP, &collision, "");
+					TwAddVarRW(DUC->g_pTweakBar, "Bounciness", TW_TYPE_FLOAT, &bounciness, "min=0.0 max=1.0");
 					methode = EULER;
 				break;
 			}			
