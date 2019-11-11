@@ -75,18 +75,19 @@ void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoint
         float totalForce = s.stiffness*lengthDif;
         Vec3 dir = m2.position-m1.position;
         normalize(dir);
-        if(!m1.isFixed)
-            m1.force += dir*totalForce;
-        if(!m2.isFixed)
-            m2.force -= dir*totalForce;
+        m1.force += dir*totalForce;
+        m2.force -= dir*totalForce;
     }
 }
 void EulerIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep)
 {
     for(auto &ms: mps)
     {
-        ms.position += timestep*ms.velocity;
-        ms.velocity += ms.force*(timestep/ms.mass);
+		if (!ms.isFixed)
+		{
+			ms.position += timestep * ms.velocity;
+			ms.velocity += ms.force * (timestep / ms.mass);
+		}
     }
 }
 void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep)
@@ -97,8 +98,11 @@ void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mp
     EulerIntegration(tmpSprings,tmpMassPoints,timestep*.5);
     applyForces(tmpSprings,tmpMassPoints);
     for(size_t i = 0; i < mps.size();i++){
-        mps[i].position += timestep*tmpMassPoints[i].velocity;
-        mps[i].velocity += timestep*tmpMassPoints[i].force/mps[i].mass;
+		if (!mps[i].isFixed)
+		{
+			mps[i].position += timestep * tmpMassPoints[i].velocity;
+			mps[i].velocity += timestep * tmpMassPoints[i].force / mps[i].mass;
+		}
     }
     
 }
@@ -222,16 +226,17 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			return "Demo1,Demo2,Demo3,Demo4";
 		}
 
+
 		void MassSpringSystemSimulator::initUI(DrawingUtilitiesClass * DUC)
 		{
 			this->DUC = DUC;
-			switch (m_iTestCase)
-
 			TwAddVarRW(DUC->g_pTweakBar, "Simulation Methode", TW_TYPE_INT32, &methode, "min=0 max=2");
 			setMass(10);
-			setStiffness(40);
-			int m0 = addMassPoint(Vec3(0, 0, 0), Vec3(-1, 0, 0), false);
-			int m1 = addMassPoint(Vec3(0, 2, 0), Vec3(1, 0, 0), false);
+			setStiffness(100);
+			springs.clear();
+			massPoints.clear();
+			int m0 = addMassPoint(Vec3(0, 0, 0), Vec3(1, 0, 0), false);
+			int m1 = addMassPoint(Vec3(0, 2, 0), Vec3(-1, 0, 0), false);
 			addSpring(m0, m1, 1);
 		}
 
@@ -240,8 +245,6 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			m_mouse.x = m_mouse.y = 0;
 			m_trackmouse.x = m_trackmouse.y = 0;
 			m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
-			springs.clear();
-			massPoints.clear();
 		}
 
 		void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext)
