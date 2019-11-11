@@ -23,6 +23,7 @@ struct Spring
 std::vector<MassPoint> massPoints;
 std::vector<Spring> springs;
 int methode = EULER;
+float internTimestep = -1;
 
 std::string vec3ToString(Vec3 &v)
 {
@@ -111,6 +112,9 @@ void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mp
 
 void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 {
+	if(!(internTimestep < 0) )
+		timeStep = internTimestep;
+
 	for (auto &s : springs) {
 		//Apply Forces
 		//TODO: m_fDamping
@@ -230,14 +234,40 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 		void MassSpringSystemSimulator::initUI(DrawingUtilitiesClass * DUC)
 		{
 			this->DUC = DUC;
-			TwAddVarRW(DUC->g_pTweakBar, "Simulation Methode", TW_TYPE_INT32, &methode, "min=0 max=2");
-			setMass(10);
-			setStiffness(100);
 			springs.clear();
 			massPoints.clear();
-			int m0 = addMassPoint(Vec3(0, 0, 0), Vec3(1, 0, 0), false);
-			int m1 = addMassPoint(Vec3(0, 2, 0), Vec3(-1, 0, 0), false);
-			addSpring(m0, m1, 1);
+
+			if(m_iTestCase < 4){
+				int m0 = addMassPoint(Vec3(0, 0, 0), Vec3(1, 0, 0), false);
+				int m1 = addMassPoint(Vec3(0, 2, 0), Vec3(-1, 0, 0), false);
+				addSpring(m0, m1, 1);
+				setMass(10);
+				setStiffness(40);
+			}
+			switch (m_iTestCase)
+			{
+				case 0:
+					methode = EULER;
+					internTimestep = .1;
+				break;
+				case 1:
+					methode = EULER;
+					internTimestep = .005;
+				break;
+				case 2:
+					methode = MIDPOINT;
+					internTimestep = .005;
+				break;
+				case 3:
+					internTimestep = -1;
+					TwAddVarRW(DUC->g_pTweakBar, "Simulation Methode", TW_TYPE_INT32, &methode, "min=0 max=2");
+					methode = EULER;
+				break;
+			}
+			
+			
+			
+			
 		}
 
 		void MassSpringSystemSimulator::reset()
