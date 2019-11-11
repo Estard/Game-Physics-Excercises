@@ -115,6 +115,9 @@ void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mp
 
 void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 {
+	if(!massPoints.empty() && massPoints[0].mass != m_fMass)
+		setMass(m_fMass);
+
 	if(!(internTimestep < 0) )
 		timeStep = internTimestep;
 
@@ -289,8 +292,11 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 				break;
 				case 3:
 					internTimestep = -1;
-					TwAddVarRW(DUC->g_pTweakBar, "Simulation Methode", TW_TYPE_INT32, &methode, "min=0 max=2");
 					methode = EULER;
+					TwAddVarRW(DUC->g_pTweakBar, "Simulation Methode", TW_TYPE_INT32, &methode, "min=0 max=2");
+					TwAddVarRW(DUC->g_pTweakBar, "Damping", TW_TYPE_FLOAT, &m_fDamping, "min=0.0 max=1.0");
+					TwAddVarRW(DUC->g_pTweakBar, "Mass", TW_TYPE_FLOAT, &m_fMass, "min=0.001");
+					
 				break;
 			}
 			
