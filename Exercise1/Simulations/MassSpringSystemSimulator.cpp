@@ -19,13 +19,17 @@ struct Spring
     float stiffness;
 };
 
+
+std::vector<MassPoint> massPoints;
+std::vector<Spring> springs;
+int methode = EULER;
+
 std::string vec3ToString(Vec3 &v)
 {
     std::stringstream ss;
     ss << v.x << ' ' << v.y <<' ' << v.z;
     return ss.str();
 }
-
 std::string massPointToString(MassPoint &ms)
 {
  std::stringstream ss;
@@ -34,9 +38,6 @@ std::string massPointToString(MassPoint &ms)
  ss << "\nVelocity: "<<vec3ToString(ms.velocity);
  return ss.str();
 }
-
-std::vector<MassPoint> massPoints;
-
 std::string springToString(Spring &s)
 {
     std::stringstream ss;
@@ -48,9 +49,7 @@ std::string springToString(Spring &s)
 
 }
 
-std::vector<Spring> springs;
 
-int methode = EULER;
 MassSpringSystemSimulator::MassSpringSystemSimulator()
 {
      m_fMass = 1.;
@@ -61,22 +60,6 @@ MassSpringSystemSimulator::MassSpringSystemSimulator()
 	 m_oldtrackmouse = Point2D();
 	 m_iIntegrator = 0;
 }
-
-
-/*DEPRECATED
-void EulerIntegration(MassPoint &ms,float timestep)
-{
-    ms.position += timestep*ms.velocity;
-    ms.velocity += ms.force*(timestep/ms.mass);
-}
-
-void MidPointIntegration(MassPoint &ms,float timestep)
-{
-    ms.position += timestep*ms.velocity;
-    ms.velocity += ms.force*(timestep/ms.mass);
-}
-*/
-
 
 void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoints)
 {
@@ -98,7 +81,6 @@ void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoint
             m2.force -= dir*totalForce;
     }
 }
-
 void EulerIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep)
 {
     for(auto &ms: mps)
@@ -107,7 +89,6 @@ void EulerIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,f
         ms.velocity += ms.force*(timestep/ms.mass);
     }
 }
-
 void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep)
 {
     std::vector<Spring> tmpSprings = springs;
@@ -259,6 +240,8 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			m_mouse.x = m_mouse.y = 0;
 			m_trackmouse.x = m_trackmouse.y = 0;
 			m_oldtrackmouse.x = m_oldtrackmouse.y = 0;
+			springs.clear();
+			massPoints.clear();
 		}
 
 		void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext)
