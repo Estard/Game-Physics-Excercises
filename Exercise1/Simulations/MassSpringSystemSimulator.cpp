@@ -62,7 +62,7 @@ MassSpringSystemSimulator::MassSpringSystemSimulator()
 	 m_iIntegrator = 0;
 }
 
-void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoints)
+void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoints, float damping)
 {
     //Clear Forces
      for(auto &mp : massPoints)
@@ -79,6 +79,9 @@ void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoint
         m1.force += dir*totalForce;
         m2.force -= dir*totalForce;
     }
+	for (auto& m : massPoints) {
+		m.force += -damping * m.velocity;
+	}
 }
 void EulerIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep)
 {
@@ -91,13 +94,13 @@ void EulerIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,f
 		}
     }
 }
-void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep)
+void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep, float damping)
 {
     std::vector<Spring> tmpSprings = springs;
     std::vector<MassPoint> tmpMassPoints = mps;
 
     EulerIntegration(tmpSprings,tmpMassPoints,timestep*.5);
-    applyForces(tmpSprings,tmpMassPoints);
+    applyForces(tmpSprings,tmpMassPoints, damping);
     for(size_t i = 0; i < mps.size();i++){
 		if (!mps[i].isFixed)
 		{
@@ -118,7 +121,7 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 	for (auto &s : springs) {
 		//Apply Forces
 		//TODO: m_fDamping
-		applyForces(springs, massPoints);
+		applyForces(springs, massPoints, m_fDamping);
 
 		//Integrate based on Method
 		switch (methode)
@@ -127,7 +130,7 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			EulerIntegration(springs, massPoints, timeStep);
 			break;
 		case MIDPOINT:
-			MidpointIntegration(springs, massPoints, timeStep);
+			MidpointIntegration(springs, massPoints, timeStep, m_fDamping);
 			break;
 		default:
 			break;
@@ -237,12 +240,38 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			springs.clear();
 			massPoints.clear();
 
-			if(m_iTestCase < 4){
+			setMass(10);
+			setStiffness(40);
+
+			if(m_iTestCase < 3){
 				int m0 = addMassPoint(Vec3(0, 0, 0), Vec3(1, 0, 0), false);
 				int m1 = addMassPoint(Vec3(0, 2, 0), Vec3(-1, 0, 0), false);
 				addSpring(m0, m1, 1);
-				setMass(10);
-				setStiffness(40);
+			}
+			else
+			{
+				addMassPoint(Vec3(0, 0, 0), Vec3(0, -1, 0), false);
+				addMassPoint(Vec3(1, 0, 0), Vec3(1, 0, 0), false);
+				addMassPoint(Vec3(0, 1, 0), Vec3(0, 0, -1), false);
+				addMassPoint(Vec3(1, 1, 0), Vec3(-1, 0, 0), false);
+				addMassPoint(Vec3(0, 0, 1), Vec3(0, 0, 1), false);
+				addMassPoint(Vec3(2, 3, 0), Vec3(1, 0, 0), false);
+				addMassPoint(Vec3(1, 0, 5), Vec3(), false);
+				addMassPoint(Vec3(2, 2, 1), Vec3(1, 0, 0), false);
+				addMassPoint(Vec3(2, 3, 1), Vec3(0, 3, 0), false);
+				addMassPoint(Vec3(2, 3, 2), Vec3(), true);
+
+				addSpring(0, 1, 1);
+				addSpring(1, 2, 3);
+				addSpring(1, 3, 1);
+				addSpring(3, 4, 5);
+				addSpring(1, 6, 2);
+				addSpring(4, 5, 2);
+				addSpring(6, 2, 3);
+				addSpring(4, 6, 1);
+				addSpring(8, 9, 1);
+				addSpring(7, 8, 1);
+				addSpring(7, 9, 2);
 			}
 			switch (m_iTestCase)
 			{
@@ -279,24 +308,17 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 
 		void MassSpringSystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext)
 		{
-			switch (m_iTestCase)
-			{
-			case 0: drawDemo1(); break;
-			}
-		}
 
-		void MassSpringSystemSimulator::drawDemo1() {
-
-				DUC->setUpLighting(Vec3(),0.4*Vec3(1,1,1),100,0.6*Vec3(0.97,0.86,1));
-			for(auto &mp: massPoints)
+			DUC->setUpLighting(Vec3(), 0.4 * Vec3(1, 1, 1), 100, 0.6 * Vec3(0.97, 0.86, 1));
+			for (auto& mp : massPoints)
 			{
-				DUC->drawSphere(mp.position,Vec3(.05,.05,.05));
+				DUC->drawSphere(mp.position, Vec3(.05, .05, .05));
 			}
-			for(auto &s: springs)
+			for (auto& s : springs)
 			{
 				DUC->beginLine();
-				DUC->drawLine(massPoints[s.massPoint1].position,Vec3(0.,1.,1.),
-				massPoints[s.massPoint2].position,Vec3(0.,1.,1.));
+				DUC->drawLine(massPoints[s.massPoint1].position, Vec3(0., 1., 1.),
+					massPoints[s.massPoint2].position, Vec3(0., 1., 1.));
 				DUC->endLine();
 			}
 		}
