@@ -32,7 +32,6 @@
 *.app
 Exercise1/.vs/
 Exercise1/Simulations/Demo_2017.vcxproj.user
-Exercise1/Simulations/MassSpringSystemSimulator.cpp
 Exercise1/Simulations/Win32/Debug/Demo_2017.log
 Exercise1/Simulations/Win32/Debug/Demo_2017.vcxproj.FileListAbsolute.txt
 Exercise1/Simulations/Win32/Debug/Simulations.Build.CppClean.log
