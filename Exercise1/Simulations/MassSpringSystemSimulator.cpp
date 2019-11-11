@@ -316,23 +316,21 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 				addSpring(0, 1, 1);
 				addSpring(0, 2, 2);
 			}
+			methode = EULER;
 			switch (m_iTestCase)
 			{
 				case 0:
-					methode = EULER;
 					internTimestep = .1;
-				break;
-				case 1:
-					methode = EULER;
-					internTimestep = .005;
 				break;
 				case 2:
 					methode = MIDPOINT;
+				case 1:
 					internTimestep = .005;
 				break;
+				case 4:
+					methode = LEAPFROG;
 				default:
 					internTimestep = -1;
-					methode = EULER;
 					TwAddVarRW(DUC->g_pTweakBar, "Simulation Methode", TW_TYPE_INT32, &methode, "min=0 max=2");
 					TwAddVarRW(DUC->g_pTweakBar, "Damping", TW_TYPE_FLOAT, &m_fDamping, "min=0.0");
 					TwAddVarRW(DUC->g_pTweakBar, "Collision", TW_TYPE_BOOLCPP, &collision, "");
