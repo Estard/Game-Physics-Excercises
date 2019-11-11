@@ -10,13 +10,13 @@ struct MassPoint
     Vec3 position,velocity;
     bool isFixed;
     Vec3 force;
-    float mass;
+    double mass;
 };
 struct Spring
 {
     int massPoint1,massPoint2;
-    float initialLength;
-    float stiffness;
+    double initialLength;
+    double stiffness;
 };
 
 
@@ -24,7 +24,7 @@ std::vector<MassPoint> massPoints;
 std::vector<Spring> springs;
 std::vector<Vec3> leap;
 int methode = EULER;
-float internTimestep = -1;
+double internTimestep = -1;
 bool gravitation = false;
 bool collision = false;
 float bounciness = 0.0;
@@ -64,16 +64,19 @@ MassSpringSystemSimulator::MassSpringSystemSimulator()
 	 m_trackmouse = Point2D();
 	 m_oldtrackmouse = Point2D();
 	 m_iIntegrator = 0;
+	 springs.clear();
+	 massPoints.clear();
+	 leap.clear();
 }
 
-void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoints, float damping)
+void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoints, double damping)
 {    
     //Spring Forces
     for(auto &s: springs){
         MassPoint &m1 = massPoints[s.massPoint1];
         MassPoint &m2 = massPoints[s.massPoint2];
-        float lengthDif = sqrt(m1.position.squaredDistanceTo(m2.position)) -s.initialLength;
-        float totalForce = s.stiffness*lengthDif;
+        double lengthDif = sqrt(m1.position.squaredDistanceTo(m2.position)) -s.initialLength;
+        double totalForce = s.stiffness*lengthDif;
         Vec3 dir = m2.position-m1.position;
         normalize(dir);
         m1.force += dir*totalForce;
@@ -83,7 +86,7 @@ void applyForces(std::vector<Spring> &springs, std::vector<MassPoint> &massPoint
 		m.force += -damping * m.velocity;
 	}
 }
-void EulerIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep)
+void EulerIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,double timestep)
 {
     for(auto &ms: mps)
     {
@@ -94,22 +97,21 @@ void EulerIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,f
 		}
     }
 }
-void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,float timestep, float damping)
+void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mps,double timestep, double damping)
 {
-    std::vector<Spring> tmpSprings = springs;
-    std::vector<MassPoint> tmpMassPoints = mps;
+    std::vector<MassPoint> midPointMP = mps;
 
-    EulerIntegration(tmpSprings,tmpMassPoints,timestep*.5);
-    applyForces(tmpSprings,tmpMassPoints, damping);
+    EulerIntegration(springs, midPointMP,timestep*.5);
+    applyForces(springs, midPointMP, damping);
     for(size_t i = 0; i < mps.size();i++){
 		if (!mps[i].isFixed)
 		{
-			mps[i].position += timestep * tmpMassPoints[i].velocity;
-			mps[i].velocity += timestep * tmpMassPoints[i].force / mps[i].mass;
+			mps[i].position += timestep * midPointMP[i].velocity;
+			mps[i].velocity += timestep * midPointMP[i].force / mps[i].mass;
 		}
     }    
 }
-void LeapFrogIntegration(std::vector<Spring>& springs, std::vector<MassPoint>& mps, float timestep, float damping) 
+void LeapFrogIntegration(std::vector<Spring>& springs, std::vector<MassPoint>& mps, double timestep, double damping) 
 {
 	for (int i = 0; i < mps.size(); i++)
 	{
@@ -130,6 +132,10 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 	if(!(internTimestep < 0) )
 		timeStep = internTimestep;
 	//Apply Forces
+	for (auto& ms : massPoints)
+	{
+		ms.force = Vec3();
+	}
 	applyForces(springs, massPoints, m_fDamping);
 	
 	//Integrate based on Method
@@ -252,18 +258,15 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 		{
 				for (auto& m : massPoints)
 				{
-					m.force = Vec3();
 					if(gravitation)
-						m.force += 9.8 * m.mass * Vec3(0, -1, 0);
+						m.velocity += 9.8 * Vec3(0, -1, 0) * timeElapsed;
 				}
 		}
-
 
 		const char* MassSpringSystemSimulator::getTestCasesStr()
 		{
 			return "Demo1,Demo2,Demo3,Demo4,Demo5";
 		}
-
 
 		void MassSpringSystemSimulator::initUI(DrawingUtilitiesClass * DUC)
 		{
