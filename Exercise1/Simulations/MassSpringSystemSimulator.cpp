@@ -152,10 +152,10 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			ms.velocity.z = 0; //*= -1 für bounciness
 		}
 #endif
-
 		for (auto &s : springs) {
-			std::cout << "\nUpdates Springs: " << springToString(s);
+			std::cout << "Updates Springs: " << springToString(s) << std::endl;
 		}
+		std::cout << getNumberOfSprings() << std::endl;
 	}
 }
 		/*Boring Getters and Setters*/
@@ -249,6 +249,11 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 			switch (m_iTestCase)
 
 			TwAddVarRW(DUC->g_pTweakBar, "Simulation Methode", TW_TYPE_INT32, &methode, "min=0 max=2");
+			setMass(10);
+			setStiffness(40);
+			int m0 = addMassPoint(Vec3(0, 0, 0), Vec3(-1, 0, 0), false);
+			int m1 = addMassPoint(Vec3(0, 2, 0), Vec3(1, 0, 0), false);
+			addSpring(m0, m1, 1);
 		}
 
 		void MassSpringSystemSimulator::reset()
@@ -267,26 +272,6 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 		}
 
 		void MassSpringSystemSimulator::drawDemo1() {
-			MassPoint p0;
-			p0.force = Vec3(0, 0, 0);
-			p0.isFixed = false;
-			p0.mass = 10;
-			p0.position = Vec3(0, 0, 0);
-			p0.velocity = Vec3(-1, 0, 0);
-
-			MassPoint p1;
-			p1.force = Vec3(0, 0, 0);
-			p1.isFixed = false;
-			p1.mass = 10;
-			p1.position = Vec3(0, 2, 0);
-			p1.velocity = Vec3(1, 0, 0);
-
-			addMassPoint(Vec3(0, 0, 0), Vec3(-1, 0, 0), false);
-			addMassPoint(Vec3(0, 2, 0), Vec3(1, 0, 0), false);
-			addSpring(0, 1, 1);
-
-			simulateTimestep(0.1);
-			cout << massPointToString(massPoints[0]) << std::endl;
-			cout << massPointToString(massPoints[1]) << std::endl;
+			
 		}
 	
