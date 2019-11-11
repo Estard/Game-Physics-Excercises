@@ -334,9 +334,9 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 					internTimestep = -1;
 					methode = EULER;
 					TwAddVarRW(DUC->g_pTweakBar, "Simulation Methode", TW_TYPE_INT32, &methode, "min=0 max=2");
-					TwAddVarRW(DUC->g_pTweakBar, "Damping", TW_TYPE_FLOAT, &m_fDamping, "min=0.0 max=1.0");
+					TwAddVarRW(DUC->g_pTweakBar, "Damping", TW_TYPE_FLOAT, &m_fDamping, "min=0.0");
 					TwAddVarRW(DUC->g_pTweakBar, "Collision", TW_TYPE_BOOLCPP, &collision, "");
-					TwAddVarRW(DUC->g_pTweakBar, "Bounciness", TW_TYPE_FLOAT, &bounciness, "min=0.0 max=1.0");
+					TwAddVarRW(DUC->g_pTweakBar, "Bounciness", TW_TYPE_FLOAT, &bounciness, "min=0.0");
 					TwAddVarRW(DUC->g_pTweakBar, "Mass", TW_TYPE_FLOAT, &m_fMass, "min=0.001");
 					TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_BOOLCPP, &gravitation, "");
 				break;
