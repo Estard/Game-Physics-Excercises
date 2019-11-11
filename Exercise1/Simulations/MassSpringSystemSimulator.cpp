@@ -274,7 +274,7 @@ void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 				DUC->setUpLighting(Vec3(),0.4*Vec3(1,1,1),100,0.6*Vec3(0.97,0.86,1));
 			for(auto &mp: masspoints)
 			{
-				DUC->drawSphere(mp.position,Vec3(mp.mass,mp.mass,mp.mass));
+				DUC->drawSphere(mp.position,Vec3(.05,.05,.05));
 			}
 		
 			
