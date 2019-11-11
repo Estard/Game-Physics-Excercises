@@ -127,8 +127,6 @@ void MidpointIntegration(std::vector<Spring> &springs,std::vector<MassPoint> &mp
 void MassSpringSystemSimulator::simulateTimestep(float timeStep)
 {
 	for (auto &s : springs) {
-		std::cout << "\nInitialSprings: " << springToString(s);
-
 		//Apply Forces
 		//TODO: m_fDamping
 		applyForces(springs, massPoints);
