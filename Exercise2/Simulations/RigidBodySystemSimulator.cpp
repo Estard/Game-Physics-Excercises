@@ -59,7 +59,12 @@ void RigidBodySystemSimulator::reset()
 void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext)
 {
 	for(auto &rb: rigidBodies){
-		DUC->drawRigidBody(/*TODO:*/rb);
+		auto rot = rb.rotation.getRotMat();
+		Mat4 scale;
+		scale.initScaling(rb.scale.x,rb.scale.y,rb.scale.z);
+		Mat4 translate;
+		translate.initTranslation(rb.position.x,rb.position.y,rb.position.z);
+		DUC->drawRigidBody(translate*rot*scale);
 	}
 }
 void RigidBodySystemSimulator::notifyCaseChanged(int testCase)
@@ -90,18 +95,6 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
     }
   }
 
-  glm::mat3 calcInvInertiaCube(Vec3 size, float mass)
-  {
-    float factor = mass / 12.;
-    glm::mat3 it = glm::mat3(0.);
-    float w2 = size.x * size.x;
-    float h2 = size.y * size.y;
-    float d2 = size.z * size.z;
-    it[0][0] = 1. / (factor * (h2 + d2));
-    it[1][1] = 1. / (factor * (w2 + d2));
-    it[2][2] = 1. / (factor * (h2 + w2));
-    return it;
-  }
 void RigidBodySystemSimulator::onClick(int x, int y){}
 void RigidBodySystemSimulator::onMouse(int x, int y){}
 
