@@ -8,7 +8,7 @@ struct RigidBody
 {
 	Vec3 position = Vec3();
 	Vec3 scale = Vec3();
-	Quat rotation = Quat();
+	Quat rotation = Quat(Vec3(1,0,0),0);
 	Vec3 linearVelocity = Vec3();
 	Vec3 angularVelocity = Vec3();
 	Vec3 angularMomentum = Vec3();
