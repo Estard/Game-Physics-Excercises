@@ -67,7 +67,41 @@ void RigidBodySystemSimulator::notifyCaseChanged(int testCase)
 	m_iTestCase = testCase;
 }
 void RigidBodySystemSimulator::externalForcesCalculations(float timeElapsed){}
-void RigidBodySystemSimulator::simulateTimestep(float timeStep){}
+void RigidBodySystemSimulator::simulateTimestep(float timeStep)
+  {
+    for (auto &rb : rigidBodies) {
+      rb.da.transform.position += timeStep * rb.linearVelocity;
+      rb.linearVelocity += timeStep * rb.force / rb.mass;
+      rb.da.transform.rotation =
+          glm::normalize(
+              rb.da.transform.rotation
+                  + timeStep * .5f
+                      * (glm::quat(0, rb.angularVelocity)
+                          * rb.da.transform.rotation));
+      rb.angularMomentum += timeStep * rb.torque;
+      glm::mat3 Rot = glm::toMat3(rb.da.transform.rotation);
+      glm::mat3 RotT = glm::inverse(Rot);
+      glm::mat3 Im1 = Rot * rb.inertiaTensor * RotT;
+
+      rb.angularVelocity = Im1 * rb.angularMomentum;
+
+      rb.force = Vec3(0.);
+      rb.torque = Vec3(0.);
+    }
+  }
+
+  glm::mat3 calcInvInertiaCube(Vec3 size, float mass)
+  {
+    float factor = mass / 12.;
+    glm::mat3 it = glm::mat3(0.);
+    float w2 = size.x * size.x;
+    float h2 = size.y * size.y;
+    float d2 = size.z * size.z;
+    it[0][0] = 1. / (factor * (h2 + d2));
+    it[1][1] = 1. / (factor * (w2 + d2));
+    it[2][2] = 1. / (factor * (h2 + w2));
+    return it;
+  }
 void RigidBodySystemSimulator::onClick(int x, int y){}
 void RigidBodySystemSimulator::onMouse(int x, int y){}
 
@@ -99,7 +133,7 @@ void RigidBodySystemSimulator::applyForceOnBody(int i, Vec3 loc, Vec3 force)
 	if(!(i < getNumberOfRigidBodies()))
 		return;
 	rigidBodies[i].force += force;
-	rigidBodies[i].torque += cross(loc,force);
+	rigidBodies[i].torque += cross(loc - rigidBodies[i].position,force);
 		
 }
 void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, int mass)
@@ -108,6 +142,7 @@ void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, int mass)
 	rb.position = position;
 	rb.scale = size;
 	rb.mass = mass;
+	rb.inverseInertia = calcInvInertiaCube(rb.scale,rb.mass);
 	rigidBodies.emplace_back(rb);
 
 }
