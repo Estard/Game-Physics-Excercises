@@ -66,6 +66,23 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 		applyForceOnBody(0, Vec3(.3, .5, .25), Vec3(1, 1, 0));
 		simulateTimestep(0.01);
 		break;
+	case 2:
+		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
+		addRigidBody(Vec3(2,2,2), Vec3(1., .6, .5), 2.);
+		setVelocityOf(1,Vec3(-1,-1,-1));
+		setOrientationOf(1,Quat(Vec3(1,1,0),M_PI*.5));
+	break;
+
+	case 3:
+		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
+		addRigidBody(Vec3(2,2,2), Vec3(1., .6, .5), 2.);
+		addRigidBody(Vec3(5,0,0), Vec3(1., .6, .5), 2.);
+		addRigidBody(Vec3(-2,-2,-2), Vec3(1., .6, .5), 2.);
+		setVelocityOf(1,Vec3(-1,-1,-1));
+		setVelocityOf(3,Vec3(1,1,1));
+		setVelocityOf(2,Vec3(-1,0,0));
+		setOrientationOf(1,Quat(Vec3(1,1,0),M_PI*.5));
+	break;
 	}
 }
 void RigidBodySystemSimulator::reset()
