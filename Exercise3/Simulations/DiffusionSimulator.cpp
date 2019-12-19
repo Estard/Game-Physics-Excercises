@@ -189,8 +189,21 @@ void setupA(SparseMatrix<Real>& A, double factor, Grid* T) {//add your own param
 			A.set_element(i, i, 1); // set diagonal
 	}
 	
-	uint32_t n = T->n();
-	uint32_t m = T->m();
+	uint32_t n = T->n(); 
+	uint32_t x = 0, y = 0;
+	for(uint32_t row = 0; row < static_cast<uint32_t>(A.n); row++){
+		A.set_element(x+(y-1)*n,row,-factor);
+		A.set_element(x-1+y*n,row,-factor);
+		A.set_element(x+y*n,row,1.-4.*factor);
+		A.set_element(x+1+y*n,row,-factor);
+		A.set_element(x+(y+1)*n,row,-factor);
+		x++;
+		if(x==n){
+			y++;
+			x = 0;
+		}
+#if 0	
+	}
 	for (uint32_t y = 1; y < m - 1; y++) {
      		for (uint32_t x = 1; x < n - 1; x++) {
 			A.set_element(y,x+(y-1)*n,-factor);
@@ -200,6 +213,7 @@ void setupA(SparseMatrix<Real>& A, double factor, Grid* T) {//add your own param
 			A.set_element(y,x+(y+1)*n,-factor);
 		}
 	}
+#endif
 }
 
 
