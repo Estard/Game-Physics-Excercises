@@ -2,7 +2,7 @@
 #include "pcgsolver.h"
 using namespace std;
 
-Grid::Grid(uint32_t n = 16, uint32_t m = 16): _n(n),_m(m),buffer(false),
+Grid::Grid(uint32_t n, uint32_t m): _n(n),_m(m),buffer(false),
 					values0(std::vector<Real>(_n*_m,0)),
 					values1(std::vector<Real>(_n*_m,0))
 {
@@ -58,10 +58,30 @@ void DiffusionSimulator::reset(){
 
 }
 
+void fillT(Grid* T) {//add your own parameters
+	// to be implemented
+	//fill T with solved vector x
+	//make sure that the temperature in boundary cells stays zero
+
+	uint32_t n = T->n();
+	uint32_t m = T->m();
+	auto& values0 = T->currentValues();
+	auto& values1 = T->nextValues();
+	for (uint32_t y = 0; y < m; y++) {
+		for (uint32_t x = 0; x < n; x++) {
+			float t = 2.*cos((x*(y - m / 2)) / ((n + m)*.5));
+			bool isEdge = x == 0 || x + 1 == n || y == 0 || y + 1 == m;
+			float v = isEdge ? 0. : t;
+			values0[x + y * n] = v;
+			values1[x + y * n] = v;
+		}
+	}
+}
+
 void DiffusionSimulator::initUI(DrawingUtilitiesClass * DUC)
 {
 	this->DUC = DUC;
-	fillT();
+	fillT(T);
 	// to be implemented
 }
 
@@ -122,27 +142,8 @@ void setupB(std::vector<Real>& b) {//add your own parameters
 	}
 }
 
-void fillT() {//add your own parameters
-	// to be implemented
-	//fill T with solved vector x
-	//make sure that the temperature in boundary cells stays zero
 
-	uint32_t n = T->n();
-	uint32_t m = T->m();
-	auto& values0 = T->currentValues();
-	auto& values1 = T->nextValues();
-	for (uint32_t y = 0; y < m; y++) {
-	      	for (uint32_t x = 0; x < n; x++) {
-	        float t = 2.*cos((x*(y-m/2))/((n+m)*.5));
-	        bool isEdge = x == 0 || x + 1 == n || y == 0 || y + 1 == m;
-	        float v =  isEdge ? 0. : t;
-	       	values0[x+y*n] = v;
-		values1[x+y*n] = v;
-   	   }
-    	}
-}
-
-void setupA(SparseMatrix<Real>& A, double factor) {//add your own parameters
+void setupA(SparseMatrix<Real>& A, double factor, Grid* T) {//add your own parameters
 	// to be implemented
 	//setup Matrix A[sizeX*sizeY*sizeZ, sizeX*sizeY*sizeZ]
 	// set with:  A.set_element( index1, index2 , value );
@@ -154,8 +155,8 @@ void setupA(SparseMatrix<Real>& A, double factor) {//add your own parameters
 			A.set_element(i, i, 1); // set diagonal
 	}
 	
-	uint32_t n = t->n();
-	uint32_t m = t->m();
+	uint32_t n = T->n();
+	uint32_t m = T->m();
 	for (uint32_t y = 1; y < m - 1; y++) {
      		for (uint32_t x = 1; x < n - 1; x++) {
 			A.set_element(y,x+(y-1)*n,-factor);
@@ -173,9 +174,9 @@ void DiffusionSimulator::diffuseTemperatureImplicit(Real timestep) {//add your o
 	// to be implemented
 	uint32_t N = T->n()*T->m();//N = sizeX*sizeY*sizeZ
 	SparseMatrix<Real> A(N);
-	std::vector<Real>& b(N) = T->currentValues();
+	std::vector<Real>& b = T->currentValues();
 
-	setupA(A, alpha*timestep);
+	setupA(A, alpha*timestep,T);
 	//setupB(b);
 
 	// perform solve
