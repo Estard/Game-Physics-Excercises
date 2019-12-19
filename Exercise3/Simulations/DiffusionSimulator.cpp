@@ -141,6 +141,16 @@ void DiffusionSimulator::notifyCaseChanged(int testCase)
 	}
 }
 
+void DiffusionSimulator::notifySizeChanged(uint32_t n, uint32_t m)
+{
+	m_vfMovableObjectPos = Vec3(0, 0, 0);
+	m_vfRotate = Vec3(0, 0, 0);
+	//
+	//to be implemented
+	//
+	T->resize(n,m);
+}
+
 Grid* DiffusionSimulator::diffuseTemperatureExplicit(Real timestep) {//add your own parameters
 	// to be implemented
 	//make sure that the temperature in boundary cells stays zero

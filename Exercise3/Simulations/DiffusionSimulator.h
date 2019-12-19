@@ -41,6 +41,7 @@ public:
 	void reset();
 	void drawFrame(ID3D11DeviceContext* pd3dImmediateContext);
 	void notifyCaseChanged(int testCase);
+	void notifySizeChanged(uint32_t n, uint32_t m);
 	void simulateTimestep(float timeStep);
 	void externalForcesCalculations(float timeElapsed) {};
 	void onClick(int x, int y);

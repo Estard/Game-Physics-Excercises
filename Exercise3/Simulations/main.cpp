@@ -54,6 +54,10 @@ int g_iTestCase = 0;
 int g_iPreTestCase = -1;
 bool  g_bSimulateByStep = false;
 bool firstTime = true;
+uint32_t n = 16;
+uint32_t m = 16;
+uint32_t pre_N = 16;
+uint32_t pre_M = 16;
 // Video recorder
 FFmpeg* g_pFFmpegVideoRecorder = nullptr;
 
@@ -73,6 +77,8 @@ void initTweakBar(){
 #ifdef ADAPTIVESTEP
 	TwAddVarRW(g_pDUC->g_pTweakBar, "Time Factor", TW_TYPE_FLOAT, &g_fTimeFactor, "step=0.01   min=0.01");
 #endif
+	TwAddVarRW(g_pDUC->g_pTweakBar, "N", TW_TYPE_UINT32, &n, "min=3");
+	TwAddVarRW(g_pDUC->g_pTweakBar, "M", TW_TYPE_UINT32, &m, "min=3");
 }
 
 
@@ -257,6 +263,20 @@ void CALLBACK OnFrameMove( double dTime, float fElapsedTime, void* pUserContext 
 		g_pSimulator->initUI(g_pDUC);
 		g_iPreTestCase = g_iTestCase;
 	}
+#ifdef DIFFUSION_SYSTEM
+	if (n!=pre_N ||m != pre_M) {// gridsize changed
+		// clear old setup and build up new setup
+		if (g_pDUC->g_pTweakBar != nullptr) {
+			TwDeleteBar(g_pDUC->g_pTweakBar);
+			g_pDUC->g_pTweakBar = nullptr;
+		}
+		initTweakBar();
+		(static_cast<DiffusionSimulator*>(g_pSimulator))->notifySizeChanged(n,m);
+		g_pSimulator->initUI(g_pDUC);
+		pre_N = n;
+		pre_M = m;
+	}
+#endif
 	if(!g_bSimulateByStep){
 #ifdef ADAPTIVESTEP
 		g_pSimulator->externalForcesCalculations(fElapsedTime);
