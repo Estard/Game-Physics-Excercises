@@ -190,30 +190,23 @@ void setupA(SparseMatrix<Real>& A, double factor, Grid* T) {//add your own param
 	}
 	
 	uint32_t n = T->n(); 
+	uint32_t m = T->m();
 	uint32_t x = 0, y = 0;
-	for(uint32_t row = 0; row < static_cast<uint32_t>(A.n); row++){
-		A.set_element(x+(y-1)*n,row,-factor);
-		A.set_element(x-1+y*n,row,-factor);
-		A.set_element(x+y*n,row,1.-4.*factor);
-		A.set_element(x+1+y*n,row,-factor);
-		A.set_element(x+(y+1)*n,row,-factor);
+	for (uint32_t row = 0; row < static_cast<uint32_t>(A.n); row++) {
+		if (!(x == 0 || y == 0 || x == n-1 || y == m -1)) {
+			A.set_element(row, x + (y - 1)*n, -factor);
+			A.set_element(row, x - 1 + y * n, -factor);
+			A.set_element(row, x + y * n, 1. + 4.*factor);
+			A.set_element(row, x + 1 + y * n, -factor);
+			A.set_element(row, x + (y + 1)*n, -factor);
+		}
 		x++;
 		if(x==n){
 			y++;
 			x = 0;
 		}
-#if 0	
+
 	}
-	for (uint32_t y = 1; y < m - 1; y++) {
-     		for (uint32_t x = 1; x < n - 1; x++) {
-			A.set_element(y,x+(y-1)*n,-factor);
-			A.set_element(y,x-1+y*n,-factor);
-			A.set_element(y,x+y*n,1.-4.*factor);
-			A.set_element(y,x+1+y*n,-factor);
-			A.set_element(y,x+(y+1)*n,-factor);
-		}
-	}
-#endif
 }
 
 
@@ -242,7 +235,7 @@ void DiffusionSimulator::diffuseTemperatureImplicit(Real timestep) {//add your o
 	// preconditioners: 0 off, 1 diagonal, 2 incomplete cholesky
 	solver.solve(A, b, x, ret_pcg_residual, ret_pcg_iterations, 0);
 	// x contains the new temperature values
-	std::cout << "Solver took: "<<t.deltaTime()<<'\n';
+	//std::cout << "Solver took: "<<t.deltaTime()<<'\n';
 	uint32_t n = T->n();
 	uint32_t m = T->m();
 	for (uint32_t y = 0; y < m; y++) {
