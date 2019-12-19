@@ -61,6 +61,7 @@ void DiffusionSimulator::reset(){
 void DiffusionSimulator::initUI(DrawingUtilitiesClass * DUC)
 {
 	this->DUC = DUC;
+	fillT();
 	// to be implemented
 }
 
@@ -86,9 +87,29 @@ void DiffusionSimulator::notifyCaseChanged(int testCase)
 	}
 }
 
-Grid* DiffusionSimulator::diffuseTemperatureExplicit() {//add your own parameters
+Grid* DiffusionSimulator::diffuseTemperatureExplicit(Real timestep) {//add your own parameters
 	// to be implemented
 	//make sure that the temperature in boundary cells stays zero
+	
+	auto &now = T->currentValues();
+    	auto &next = T->nextValues();
+	uint32_t n = T->n();
+	uint32_t m = T->m();
+
+    	for (uint32_t y = 1; y < m - 1; y++) {
+     		for (uint32_t x = 1; x < n - 1; x++) {
+        		Real t = now[y * n + x];
+        		Real txl = now[y * n + x - 1];
+        		Real txr = now[y * n + x + 1];
+        		Real tyl = now[(y - 1) * n + x];
+        		Real tyr = now[(y + 1) * n + x];
+        		Real dx = (txl - 2. * t + txr);
+        		Real dy = (tyl - 2. * t + tyr);
+        		Real dt = alpha * (dx + dy);
+        		next[y * n + x] = t + timestep * dt;
+     		}
+    	}
+
 	T->applyUpdates();
 	return T;
 }
@@ -105,6 +126,20 @@ void fillT() {//add your own parameters
 	// to be implemented
 	//fill T with solved vector x
 	//make sure that the temperature in boundary cells stays zero
+
+	uint32_t n = T->n();
+	uint32_t m = T->m();
+	auto& values0 = T->currentValues();
+	auto& values1 = T->nextValues();
+	for (uint32_t y = 0; y < m; y++) {
+	      	for (uint32_t x = 0; x < n; x++) {
+	        float t = 2.*cos((x*(y-m/2))/((n+m)*.5));
+	        bool isEdge = x == 0 || x + 1 == n || y == 0 || y + 1 == m;
+	        float v =  isEdge ? 0. : t;
+	       	values0[x+y*n] = v;
+		values1[x+y*n] = v;
+   	   }
+    	}
 }
 
 void setupA(SparseMatrix<Real>& A, double factor) {//add your own parameters
@@ -113,21 +148,35 @@ void setupA(SparseMatrix<Real>& A, double factor) {//add your own parameters
 	// set with:  A.set_element( index1, index2 , value );
 	// if needed, read with: A(index1, index2);
 	// avoid zero rows in A -> set the diagonal value for boundary cells to 1.0
-	for (int i = 0; i < 25; i++) {
+
+	int d = static_cast<int>(T->n()*T->m());
+	for (int i = 0; i < d; i++) {
 			A.set_element(i, i, 1); // set diagonal
+	}
+	
+	uint32_t n = t->n();
+	uint32_t m = t->m();
+	for (uint32_t y = 1; y < m - 1; y++) {
+     		for (uint32_t x = 1; x < n - 1; x++) {
+			A.set_element(y,x+(y-1)*n,-factor);
+			A.set_element(y,x-1+y*n,-factor);
+			A.set_element(y,x+y*n,1.-4.*factor);
+			A.set_element(y,x+1+y*n,-factor);
+			A.set_element(y,x+(y+1)*n,-factor);
+		}
 	}
 }
 
 
-void DiffusionSimulator::diffuseTemperatureImplicit() {//add your own parameters
+void DiffusionSimulator::diffuseTemperatureImplicit(Real timestep) {//add your own parameters
 	// solve A T = b
 	// to be implemented
 	uint32_t N = T->n()*T->m();//N = sizeX*sizeY*sizeZ
 	SparseMatrix<Real> A(N);
-	std::vector<Real> b(N);
+	std::vector<Real>& b(N) = T->currentValues();
 
-	setupA(A, 0.1);
-	setupB(b);
+	setupA(A, alpha*timestep);
+	//setupB(b);
 
 	// perform solve
 	Real pcg_target_residual = 1e-05;
@@ -157,10 +206,10 @@ void DiffusionSimulator::simulateTimestep(float timeStep)
 	switch (m_iTestCase)
 	{
 	case 0:
-		T = diffuseTemperatureExplicit();
+		T = diffuseTemperatureExplicit(timeStep);
 		break;
 	case 1:
-		diffuseTemperatureImplicit();
+		diffuseTemperatureImplicit(timeStep);
 		break;
 	}
 }
