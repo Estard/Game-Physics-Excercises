@@ -194,6 +194,15 @@ void DiffusionSimulator::diffuseTemperatureImplicit(Real timestep) {//add your o
 	// preconditioners: 0 off, 1 diagonal, 2 incomplete cholesky
 	solver.solve(A, b, x, ret_pcg_residual, ret_pcg_iterations, 0);
 	// x contains the new temperature values
+	uint32_t n = T->n();
+	uint32_t m = T->m();
+	for (uint32_t y = 0; y < m; y++) {
+		for (uint32_t i = 0; i < n; i++) {
+			if (i == 0 || y == 0 || i == n - 1 || y == m - 1) {
+				x[i + y * n] = 0;
+			}
+		}
+	}
 	//fillT();//copy x to T
 	T->applyUpdates();
 }
