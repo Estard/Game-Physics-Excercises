@@ -2,22 +2,22 @@
 #include "pcgsolver.h"
 using namespace std;
 
-Grid::Grid(uint32_t n = 16, uint32_t m = 16): n(n),m(m),buffer(false),
-					values0(std::vector<Real>(n*m,0)),
-					values1(std::vector<Real>(n*m,0))
+Grid::Grid(uint32_t n = 16, uint32_t m = 16): _n(n),_m(m),buffer(false),
+					values0(std::vector<Real>(_n*_m,0)),
+					values1(std::vector<Real>(_n*_m,0))
 {
 }
 
 void Grid::resize(uint32_t n, uint32_t m)
 {
-	this->n = n;
-	this->m = m;
+	this->_n = n;
+	this->_m = m;
 	values0.resize(n*m);
 	values1.resize(n*m);
 }
 
-uint32_t Grid::n(){return n;}
-uint32_t Grid::m(){return m;}
+uint32_t Grid::n(){return _n;}
+uint32_t Grid::m(){return _m;}
 
 std::vector<Real>& Grid::currentValues()
 {return buffer?values1:values0;}

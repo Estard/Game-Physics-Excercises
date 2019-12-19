@@ -21,7 +21,7 @@ public:
 
 private:
 	// Attributes
-	uint32_t n,m;
+	uint32_t _n,_m;
 	bool buffer;
 	std::vector<Real> values0;
 	std::vector<Real> values1; //Double buffer to avoid many heap allocations
