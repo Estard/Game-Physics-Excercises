@@ -30,6 +30,40 @@ void Grid::applyUpdates()
 
 
 
+#include <chrono>
+struct Timer
+{
+
+  Timer() :
+      startTime(std::chrono::high_resolution_clock::now())
+  {}
+
+  void reset()
+  {
+    startTime = std::chrono::high_resolution_clock::now();
+  }
+
+  double deltaTime()
+  {
+    auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration(endTime - startTime);  // @suppress("Invalid arguments")
+    return duration.count();
+  }
+
+  double deltaTimeMilli()
+  {
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        endTime - startTime);
+    return duration.count();
+  }
+
+ private:
+  std::chrono::high_resolution_clock::time_point startTime;
+
+};
+
+
 
 
 DiffusionSimulator::DiffusionSimulator():T(new Grid()),alpha(1.)
@@ -190,10 +224,11 @@ void DiffusionSimulator::diffuseTemperatureImplicit(Real timestep) {//add your o
 
 	std::vector<Real>& x = T->nextValues();
 	for (int j = 0; j < N; ++j) { x[j] = 0.; }
-
+	Timer t;
 	// preconditioners: 0 off, 1 diagonal, 2 incomplete cholesky
 	solver.solve(A, b, x, ret_pcg_residual, ret_pcg_iterations, 0);
 	// x contains the new temperature values
+	std::cout << "Solver took: "<<t.deltaTime()<<'\n';
 	uint32_t n = T->n();
 	uint32_t m = T->m();
 	for (uint32_t y = 0; y < m; y++) {
