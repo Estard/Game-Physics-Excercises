@@ -149,6 +149,7 @@ void DiffusionSimulator::notifySizeChanged(uint32_t n, uint32_t m)
 	//to be implemented
 	//
 	T->resize(n,m);
+	fillT(T);//just to be save
 }
 
 Grid* DiffusionSimulator::diffuseTemperatureExplicit(Real timestep) {//add your own parameters
