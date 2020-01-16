@@ -1,6 +1,7 @@
 #ifndef RIGIDBODYSYSTEMSIMULATOR_h
 #define RIGIDBODYSYSTEMSIMULATOR_h
 #include "Simulator.h"
+#include "collisionDetect.h"
 #include <vector>
 #define TESTCASEUSEDTORUNTEST 2
 
@@ -50,7 +51,7 @@ public:
 	void applyForceOnBody(RigidBody& rb, Vec3 loc, Vec3 force);
 	void addRigidBody(Vec3 position, Vec3 size, int mass, bool isSphere);
 
-	//CollisionInfo getCollision(RigidBody a, RigidBody b);
+	CollisionInfo getCollision(RigidBody &a, RigidBody &b);
 
 	void addBasket(Vec3 position, double scale, int segments);
 
@@ -76,6 +77,9 @@ private:
 	Vec3 calcInvInertiaSphere(float radius, float mass, bool solid = true);
 	Vec3 calcInvInertiaCube(Vec3 size, float mass);
 	void integrate(RigidBody &rb);
+
+	CollisionInfo sphereSphereCollision(RigidBody &rb0, RigidBody &rb1);
+	CollisionInfo sphereCubeCollision(RigidBody &sphere, RigidBody &cube);
 
 
 	// UI Attributes

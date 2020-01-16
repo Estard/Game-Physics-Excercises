@@ -1,6 +1,38 @@
 #include "RigidBodySystemSimulator.h"
-#include "collisionDetect.h"
 
+
+
+
+
+
+Scalar dot(Quat &a, Quat &b)
+{
+	return a.dot(b);
+}
+
+Quat conjugate(Quat &q)
+{
+	return Quat(-q.x, -q.y, -q.z,q.w,);
+}
+
+Quat inverse(Quat &q)
+{
+	return conjugate(q) / dot(q, q);
+}
+
+Vec3 rotate(Quat &q, Vec3 &v)
+{
+	return q.getRotMat()*v;
+}
+Vec3 max(Vec3 &a, Vec3 &b)
+{
+	return Vec3(max(a.x,b.x),max(a.y,b.y),max(a.z,b.z));
+}
+
+Vec3 abs(Vec3 &a)
+{
+	return Vec3(abs(a.x),abs(a.y),abs(a.z));
+}
 
 
 Vec3 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, float mass)
@@ -168,12 +200,62 @@ void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, int mass, 
 	rb.mass = mass;
 	rb.inverseInertia = calcInvInertiaCube(rb.scale, rb.mass);
 }
-/*
-CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody a, RigidBody b)
+
+//hier wäre std::optional ganz nett
+CollisionInfo RigidBodySystemSimultator::sphereSphereCollision(RigidBody &rb0, RigidBody &rb1){
+	CollisionInfo ci = {};
+	Vec3 v01 = rb1.position-rb0.position;
+	//Distance between center points
+	double d = norm(v01);
+	//radiusA + radiusB
+	double r = rb0.scale.x+rb1.scale.x;
+	if(r<d){
+		ci.isValid = false;
+		return ci;
+	}
+	ci.normalWorld = getNormalized(v01);
+	ci.depth = r-d;
+	ci.collisionPointWorld = ci.normalWorld*(rb0.scale.x-(ci.depth*.5))+rb0.position;         
+	ci.isValid = true;
+	return ci;    
+}
+
+CollisionInfo RigidBodySystemSimulator::sphereCubeCollision(RigidBody &sphere, RigidBody &cube)
 {
+	CollisionInfo ci = {};
+
+	Vec3 dir = sphere.position-cube.position;
+
+	Vec3 halfSize = cube.scale * Vec3(.5);
+	Vec3 p = rotate(inverse(cube.rotation),dir);
+	Vec3 c = max(abs(p),Vec3(0.));
+	//Distance zum äußeren Rand des RigidBodies gemessen von Kugelmitte, 0 wenn innerhalb 
+	auto l = c.norm();
+	if(l>sphere.scale.x){
+		ci.isValid = false;
+		return ci;
+	}
+
+	//TODO: Finde genauen Collisionspunkt 
+
+	return ci;
+}
+
+CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
+{
+	if(a.isSphere){
+		if(b.isSphere)
+			return sphereSphereCollision(a,b);
+		return sphereCubeCollision(a,b);
+	}
+	if(b.isSphere){
+		return sphereCubeCollision(b,a);
+	}
+	
+
 	return CollisionInfo{};
 }
-*/
+
 
 void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segments) {
 	float angle = 2. * M_PI / (double)segments;
