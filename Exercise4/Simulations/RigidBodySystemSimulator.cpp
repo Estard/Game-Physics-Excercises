@@ -1,4 +1,4 @@
-#include "RigidBodySystemSimulator.h"
+	#include "RigidBodySystemSimulator.h"
 
 
 #include <vector>
@@ -29,6 +29,13 @@ Vec3 calcInvInertiaCube(Vec3 size, float mass)
 	return Vec3(1. / (factor * (double)(h2 + d2)),
 		1. / (factor * (double)(w2 + d2)),
 		1. / (factor * (double)(h2 + w2)));
+}
+
+Vec3 calcInvInertiaSphere(float radius, float mass, bool solid = true)
+{
+	float mrr = mass*radius*radius;
+	float factor = solid?5.:3.;
+	return Vec3((1./mrr)*.5*factor);
 }
 
 // Construtors
