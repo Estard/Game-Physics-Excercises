@@ -30,11 +30,65 @@ const char* RigidBodySystemSimulator::getTestCasesStr()
 {
 	return "demo1,demo2,demo3,demo4";
 }
+
 void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 {
 	this->DUC = DUC;
-	RigidBodySystemSimulator::addBasket(Vec3(1., 1., 1.), 1.0, 20);
-}
+	rigidBodies.clear();
+
+	gravitation = false;
+
+	netMass = 1.0f;
+	netCollision = false;
+	netBounciness = 0.0f;
+	netDamping = 0.1f;
+
+	basketScale = 1.0f;
+	basketSegmnets = 4;
+
+	TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_BOOLCPP, &gravitation, "");
+	TwAddSeparator(DUC->g_pTweakBar, "sep0", NULL);
+
+	TwAddButton(DUC->g_pTweakBar, "Remove balls", removeBasketballsCallback, NULL, NULL);
+	TwAddSeparator(DUC->g_pTweakBar, "sep1", NULL);
+
+	TwAddVarRW(DUC->g_pTweakBar, "Net Mass", TW_TYPE_FLOAT, &netMass, "min=0.001");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Damping", TW_TYPE_FLOAT, &netDamping, "min=0.0");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Bounciness", TW_TYPE_FLOAT, &netBounciness, "min=0.0");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Collision", TW_TYPE_BOOLCPP, &netCollision, "");
+	TwAddSeparator(DUC->g_pTweakBar, "sep2", NULL);
+
+	TwAddVarRW(DUC->g_pTweakBar, "Basket Segments", TW_TYPE_INT32, &basketSegmnets, "min=1");
+	TwAddVarRW(DUC->g_pTweakBar, "Basket Scale", TW_TYPE_FLOAT, &basketScale, "min=0.001");
+	TwAddSeparator(DUC->g_pTweakBar, "sep3", NULL);
+
+	switch (m_iTestCase) {
+	case 0:
+		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
+		setOrientationOf(0, Quat(Vec3(0, 0, 1), M_PI * .5));
+		applyForceOnBody(0, Vec3(.3, .5, .25), Vec3(1, 1, 0));
+		simulateTimestep(1);
+		{
+		auto lin_vel = getLinearVelocityOfRigidBody(0);
+		auto ang_vel = getAngularVelocityOfRigidBody(0);
+		//auto worldspc_vel = lin_vel + 
+		std::cout << "[Linear Velocity] x: " << lin_vel.x << " y: " << lin_vel.y << " z: " << lin_vel.z << "\n";
+		std::cout << "[Angular Velocity] x: " << ang_vel.x << " y: " << ang_vel.y << " z: " << ang_vel.z << "\n";
+		std::cout << "[World Velocity] ToDo\n";
+		}
+		break;
+	case 1:
+		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
+		setOrientationOf(0, Quat(Vec3(0, 0, 1), M_PI * .5));
+		applyForceOnBody(0, Vec3(.3, .5, .25), Vec3(1, 1, 0));
+		simulateTimestep(0.01);
+		break;
+	case 2:
+		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
+		addRigidBody(Vec3(2,2,2), Vec3(1., .6, .5), 2.);
+		setVelocityOf(1,Vec3(-1,-1,-1));
+		setOrientationOf(1,Quat(Vec3(1,1,0),M_PI*.5));
+	break;
 
 void RigidBodySystemSimulator::reset()
 {
@@ -136,4 +190,10 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 	wall.position = position + scale * Vec3(-0.5, 0, 2.);
 	wall.scale = scale * Vec3(3., 3., .1);
 	rigidBodies.push_back(wall);
+}
+
+// UI Callback Methods
+void TW_CALL RigidBodySystemSimulator::removeBasketballsCallback(void* optionalData) {
+	// TODO: Implement this lateron
+	std::cout << "TODO: Implement deleting of Basketballs\n";
 }
