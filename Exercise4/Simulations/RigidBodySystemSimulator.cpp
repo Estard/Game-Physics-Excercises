@@ -131,8 +131,8 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 
 void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 {
-	for(auto &ball : rigidSpheres)
-		integrate(ball);
+	for(auto &rb : simulatedBodies)
+		integrate(rb);
 }
 
 void RigidBodySystemSimulator::onClick(int x, int y) {

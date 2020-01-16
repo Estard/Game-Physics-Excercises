@@ -9,6 +9,7 @@ struct RigidBody
 {
 	Vec3 position = Vec3();
 	Quat rotation = Quat(Vec3(1,0,0),0);
+	Vec3 scale = Vec3();
 	Vec3 linearVelocity = Vec3();
 	Vec3 angularVelocity = Vec3();
 	Vec3 angularMomentum = Vec3();
@@ -17,19 +18,9 @@ struct RigidBody
 	Vec3 inverseInertia = Vec3(); //Diagonal of matrix
 	double mass = 1.;
 
-	virutal bool isSphere();
-};
-
-struct RigidSphere : public RigidBody
-{
-	double radius = .125;
-	bool isSphere();
-};
-
-struct RigidCube : public RigidBody
-{
-	Vec3 scale = Vec3();
-	bool isSphere();
+	bool isSphere;
+	bool isStatic;
+	bool isScene;
 };
 
 
@@ -61,7 +52,7 @@ public:
 	Vec3 getLinearVelocityOfRigidBody(int i);
 	Vec3 getAngularVelocityOfRigidBody(int i);
 	void applyForceOnBody(int i, Vec3 loc, Vec3 force);
-	void addRigidBody(Vec3 position, Vec3 size, int mass);
+	void addRigidBody(Vec3 position, Vec3 size, int mass, bool isSphere);
 	void setOrientationOf(int i,Quat orientation);
 	void setVelocityOf(int i, Vec3 velocity);
 
@@ -69,8 +60,8 @@ private:
 	// Attributes
 	// add your RigidBodySystem data members, for e.g., 
 	Vec3 m_externalForce;
-	std::vector<RigidSpheres> rigidSpheres;
-	std::vector<RigidCubes> rigidCubes;
+	std::vector<RigidBody> simulatedBodies;
+	std::vector<RigidBody> staticBodies;
 
 	double knotMass;
 	double knotRestingDistance;
