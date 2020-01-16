@@ -22,13 +22,13 @@ std::vector<RigidBody> rigidBodies;
 
 Vec3 calcInvInertiaCube(Vec3 size, float mass)
 {
-	float factor = mass / 12.;
-	float w2 = size.x * size.x;
-	float h2 = size.y * size.y;
-	float d2 = size.z * size.z;
-	return Vec3(1. / (factor * (double)(h2 + d2)),
-		1. / (factor * (double)(w2 + d2)),
-		1. / (factor * (double)(h2 + w2)));
+	double factor = mass / 12.;
+	double w2 = size.x * size.x;
+	double h2 = size.y * size.y;
+	double d2 = size.z * size.z;
+	return Vec3(1. / (factor * (h2 + d2)),
+		1. / (factor * (w2 + d2)),
+		1. / (factor * (h2 + w2)));
 }
 
 Vec3 calcInvInertiaSphere(float radius, float mass, bool solid = true)

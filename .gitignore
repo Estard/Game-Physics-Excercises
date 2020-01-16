@@ -37,3 +37,6 @@ Exercise1/SimulatorTester/Win32/
 Exercise1/Win32/
 /.vs
 /Exercise4/.vs/Template_2017/v16
+/Exercise4/Simulations/Win32/Debug
+/Exercise4/SimulationsRunner/Debug
+/Exercise4/Win32/Debug
