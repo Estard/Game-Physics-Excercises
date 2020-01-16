@@ -56,6 +56,9 @@ public:
 	void setOrientationOf(int i,Quat orientation);
 	void setVelocityOf(int i, Vec3 velocity);
 
+	// UI Callbacks
+	static void TW_CALL removeBasketballsCallback(void* optionalData);
+
 private:
 	// Attributes
 	// add your RigidBodySystem data members, for e.g., 
@@ -80,5 +83,15 @@ private:
 	Point2D m_mouse;
 	Point2D m_trackmouse;
 	Point2D m_oldtrackmouse;
+
+	// Net Simulation Attributes
+	float netMass;
+	float netDamping;
+	bool netCollision;
+	float netBounciness;
+	float gravitation;
+
+	float basketScale;
+	int basketSegmnets;
 	};
 #endif

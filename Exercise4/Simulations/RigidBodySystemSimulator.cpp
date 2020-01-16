@@ -38,9 +38,38 @@ const char* RigidBodySystemSimulator::getTestCasesStr()
 {
 	return "demo1,demo2,demo3,demo4";
 }
+
 void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 {
 	this->DUC = DUC;
+	rigidBodies.clear();
+
+	gravitation = false;
+
+	netMass = 1.0f;
+	netCollision = false;
+	netBounciness = 0.0f;
+	netDamping = 0.1f;
+
+	basketScale = 1.0f;
+	basketSegmnets = 4;
+
+	TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_BOOLCPP, &gravitation, "");
+	TwAddSeparator(DUC->g_pTweakBar, "sep0", NULL);
+
+	TwAddButton(DUC->g_pTweakBar, "Remove balls", removeBasketballsCallback, NULL, NULL);
+	TwAddSeparator(DUC->g_pTweakBar, "sep1", NULL);
+
+	TwAddVarRW(DUC->g_pTweakBar, "Net Mass", TW_TYPE_FLOAT, &netMass, "min=0.001");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Damping", TW_TYPE_FLOAT, &netDamping, "min=0.0");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Bounciness", TW_TYPE_FLOAT, &netBounciness, "min=0.0");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Collision", TW_TYPE_BOOLCPP, &netCollision, "");
+	TwAddSeparator(DUC->g_pTweakBar, "sep2", NULL);
+
+	TwAddVarRW(DUC->g_pTweakBar, "Basket Segments", TW_TYPE_INT32, &basketSegmnets, "min=1");
+	TwAddVarRW(DUC->g_pTweakBar, "Basket Scale", TW_TYPE_FLOAT, &basketScale, "min=0.001");
+	TwAddSeparator(DUC->g_pTweakBar, "sep3", NULL);
+
 	switch (m_iTestCase) {
 	case 0:
 		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
@@ -181,4 +210,10 @@ void RigidBodySystemSimulator::setOrientationOf(int i, Quat orientation)
 void RigidBodySystemSimulator::setVelocityOf(int i, Vec3 velocity)
 {
 	return;
+}
+
+// UI Callback Methods
+void TW_CALL RigidBodySystemSimulator::removeBasketballsCallback(void* optionalData) {
+	// TODO: Implement this lateron
+	std::cout << "TODO: Implement deleting of Basketballs\n";
 }
