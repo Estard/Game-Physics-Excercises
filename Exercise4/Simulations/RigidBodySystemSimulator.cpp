@@ -3,16 +3,6 @@
 
 
 
-bool RigidSphere::isSphere()
-{
-	return true;
-}
-
-bool RigidCube::isSphere()
-{
-	return false;
-}
-
 Vec3 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, float mass)
 {
 	double factor = mass / 12.;
@@ -25,6 +15,7 @@ Vec3 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, float mass)
 }
 
 Vec3 RigidBodySystemSimulator::calcInvInertiaSphere(float radius, float mass, bool solid)
+{
 	float mrr = mass*radius*radius;
 	float factor = solid?5.:3.;
 	return Vec3((1./mrr)*.5*factor);
@@ -42,63 +33,28 @@ const char* RigidBodySystemSimulator::getTestCasesStr()
 void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 {
 	this->DUC = DUC;
-	switch (m_iTestCase) {
-	case 0:
-		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
-		setOrientationOf(0, Quat(Vec3(0, 0, 1), M_PI * .5));
-		applyForceOnBody(0, Vec3(.3, .5, .25), Vec3(1, 1, 0));
-		simulateTimestep(1);
-		{
-		auto lin_vel = getLinearVelocityOfRigidBody(0);
-		auto ang_vel = getAngularVelocityOfRigidBody(0);
-		//auto worldspc_vel = lin_vel + 
-		std::cout << "[Linear Velocity] x: " << lin_vel.x << " y: " << lin_vel.y << " z: " << lin_vel.z << "\n";
-		std::cout << "[Angular Velocity] x: " << ang_vel.x << " y: " << ang_vel.y << " z: " << ang_vel.z << "\n";
-		std::cout << "[World Velocity] ToDo\n";
-		}
-		break;
-	case 1:
-		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
-		setOrientationOf(0, Quat(Vec3(0, 0, 1), M_PI * .5));
-		applyForceOnBody(0, Vec3(.3, .5, .25), Vec3(1, 1, 0));
-		simulateTimestep(0.01);
-		break;
-	case 2:
-		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
-		addRigidBody(Vec3(2,2,2), Vec3(1., .6, .5), 2.);
-		setVelocityOf(1,Vec3(-1,-1,-1));
-		setOrientationOf(1,Quat(Vec3(1,1,0),M_PI*.5));
-	break;
-
-	case 3:
-		addRigidBody(Vec3(), Vec3(1., .6, .5), 2.);
-		addRigidBody(Vec3(2,2,2), Vec3(1., .6, .5), 2.);
-		addRigidBody(Vec3(5,0,0), Vec3(1., .6, .5), 2.);
-		addRigidBody(Vec3(-2,-2,-2), Vec3(1., .6, .5), 2.);
-		setVelocityOf(1,Vec3(-1,-1,-1));
-		setVelocityOf(3,Vec3(1,1,1));
-		setVelocityOf(2,Vec3(-1,0,0));
-		setOrientationOf(1,Quat(Vec3(1,1,0),M_PI*.5));
-	break;
-	}
+	RigidBodySystemSimulator::addBasket(Vec3(1., 1., 1.), 1.0, 20);
 }
+
 void RigidBodySystemSimulator::reset()
 {
-	rigidSpheres.clear();
+	rigidBodies.clear();
 }
 void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateContext)
 {
-	for (auto& rb : rigidCubes) {
-		auto rot = rb.rotation.getRotMat();
-		Mat4 scale;
-		scale.initScaling(rb.scale.x, rb.scale.y, rb.scale.z);
-		Mat4 translate;
-		translate.initTranslation(rb.position.x, rb.position.y, rb.position.z);
-		DUC->drawRigidBody(scale * rot * translate);
-	}
-
-	for(auto &s : rigidSpheres){
-		DUC->drawSphere(s.position, Vec3(s.radius));
+	for (auto& rb : rigidBodies) {
+		if (rb.isSphere) {
+			DUC->drawSphere(rb.position, Vec3(rb.scale.x));
+		}
+		else
+		{
+			auto rot = rb.rotation.getRotMat();
+			Mat4 scale;
+			scale.initScaling(rb.scale.x, rb.scale.y, rb.scale.z);
+			Mat4 translate;
+			translate.initTranslation(rb.position.x, rb.position.y, rb.position.z);
+			DUC->drawRigidBody(scale * rot * translate);
+		}
 	}
 }
 void RigidBodySystemSimulator::notifyCaseChanged(int testCase)
@@ -132,42 +88,25 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 
 void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 {
-	for(auto &rb : simulatedBodies)
-		integrate(rb);
+	for (auto& rb : rigidBodies)
+	{
+		if(!rb.isStatic)
+			integrate(rb);
+	}
 }
 
 void RigidBodySystemSimulator::onClick(int x, int y) {
-	if (m_iTestCase == 1)
-	{
-		applyForceOnBody(0, Vec3(.3, .5, .25), Vec3(1, 1, 0));
-	}
 }
-void RigidBodySystemSimulator::onMouse(int x, int y) {}
+void RigidBodySystemSimulator::onMouse(int x, int y) {
+}
 
 // ExtraFunctions
-int RigidBodySystemSimulator::getNumberOfRigidBodies()
-{
-	return -1;
-}
-Vec3 RigidBodySystemSimulator::getPositionOfRigidBody(int i)
-{
-	return Vec3();
-}
-Vec3 RigidBodySystemSimulator::getLinearVelocityOfRigidBody(int i)
-{
-	return Vec3();
-}
-Vec3 RigidBodySystemSimulator::getAngularVelocityOfRigidBody(int i)
-{
-	return Vec3();
-}
 void RigidBodySystemSimulator::applyForceOnBody(RigidBody &rb, Vec3 loc, Vec3 force)
 {
 	rb.force += force;
 	rb.torque += cross(loc - rb.position, force);
-
 }
-void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, int mass)
+void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, int mass, bool isSphere)
 {
 	RigidBody rb{};
 	rb.position = position;
@@ -175,23 +114,26 @@ void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, int mass)
 	rb.mass = mass;
 	rb.inverseInertia = calcInvInertiaCube(rb.scale, rb.mass);
 }
-void RigidBodySystemSimulator::setOrientationOf(int i, Quat orientation)
+/*
+CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody a, RigidBody b)
 {
-	return;
+	return CollisionInfo{};
 }
-void RigidBodySystemSimulator::setVelocityOf(int i, Vec3 velocity)
-{
-	return;
-}
+*/
 
-CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody& a, RigidBody& b)
-{
-	if (a.isSphere() || b.isSphere())
-	{
-
-	}
-	else
-	{
-
-	}
+void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segments) {
+	float angle = 2. * M_PI / (double)segments;
+		for (int i = 0; i < ((segments >= 4) ? segments : 4); i++) {
+			RigidBody rb{};
+			rb.position = position
+				+ Vec3(1 * scale, 0., 0.) * sin(angle*i)
+				+ Vec3(0., 0., 1 * scale) * cos(angle*i);
+			rb.scale = scale * Vec3(sin(angle / 2.) * 2., .1, .1);
+			rb.rotation = Quat(Vec3(1, 0, 0), M_PI * .25) * Quat(Vec3(0, 1, 0), 2 * M_PI * ((double)i / (double)segments));
+			rigidBodies.push_back(rb);
+		}
+	RigidBody wall{};
+	wall.position = position + scale * Vec3(-0.5, 0, 2.);
+	wall.scale = scale * Vec3(3., 3., .1);
+	rigidBodies.push_back(wall);
 }

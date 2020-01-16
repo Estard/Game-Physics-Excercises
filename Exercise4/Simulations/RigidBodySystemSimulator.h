@@ -47,23 +47,20 @@ public:
 	void onMouse(int x, int y);
 
 	// ExtraFunctions
-	int getNumberOfRigidBodies();
-	Vec3 getPositionOfRigidBody(int i);
-	Vec3 getLinearVelocityOfRigidBody(int i);
-	Vec3 getAngularVelocityOfRigidBody(int i);
-	void applyForceOnBody(int i, Vec3 loc, Vec3 force);
+	void applyForceOnBody(RigidBody& rb, Vec3 loc, Vec3 force);
 	void addRigidBody(Vec3 position, Vec3 size, int mass, bool isSphere);
-	void setOrientationOf(int i,Quat orientation);
-	void setVelocityOf(int i, Vec3 velocity);
 
-	void getCollision();
+	//CollisionInfo getCollision(RigidBody a, RigidBody b);
+
+	void addBasket(Vec3 position, double scale, int segments);
 
 private:
 	// Attributes
 	// add your RigidBodySystem data members, for e.g., 
 	Vec3 m_externalForce;
-	std::vector<RigidBody> simulatedBodies;
-	std::vector<RigidBody> staticBodies;
+	std::vector<RigidBody> rigidBodies;
+	std::vector<Spring> springs;
+	std::vector<Vec3> leap;
 
 	double knotMass;
 	double knotRestingDistance;
