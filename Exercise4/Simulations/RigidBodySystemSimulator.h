@@ -20,7 +20,6 @@ struct RigidBody
 
 	bool isSphere;
 	bool isStatic;
-	bool isScene;
 };
 
 
@@ -38,6 +37,7 @@ public:
 	// Functions
 	const char * getTestCasesStr();
 	void initUI(DrawingUtilitiesClass * DUC);
+	void initScene();
 	void reset();
 	void drawFrame(ID3D11DeviceContext* pd3dImmediateContext);
 	void notifyCaseChanged(int testCase);
@@ -48,9 +48,11 @@ public:
 
 	// ExtraFunctions
 	void applyForceOnBody(RigidBody& rb, Vec3 loc, Vec3 force);
-	void addRigidBody(Vec3 position, Vec3 size, int mass, bool isSphere);
+	void addRigidBody(Vec3 position, Vec3 size, int mass, Quat rotation, bool isSphere, bool isStatic);
 
-	//CollisionInfo getCollision(RigidBody a, RigidBody b);
+	CollisionInfo getCollision(RigidBody a, RigidBody b);
+
+	CollisionInfo checkCollisionSphereCube(RigidBody sphere, RigidBody box);
 
 	void addBasket(Vec3 position, double scale, int segments);
 
@@ -65,14 +67,6 @@ private:
 	std::vector<Spring> springs;
 	std::vector<Vec3> leap;
 
-	double knotMass;
-	double knotRestingDistance;
-	double stiffness;
-	double bounciness;
-	double damping;
-	double ballMass;
-	double timeStep;
-
 	Vec3 calcInvInertiaSphere(float radius, float mass, bool solid = true);
 	Vec3 calcInvInertiaCube(Vec3 size, float mass);
 	void integrate(RigidBody &rb);
@@ -82,15 +76,18 @@ private:
 	Point2D m_mouse;
 	Point2D m_trackmouse;
 	Point2D m_oldtrackmouse;
+	
+	double netDamping = 0.1;
+	double netMass = 1.0;
+	double friction = 0.1;
+	bool netCollision = true;
+	double netBounciness = 0.0;
+	bool gravitation = true;
+	double ballMass = 10;
+	double ballScale = 1;
+	double timeStep = 0.01;
 
-	// Net Simulation Attributes
-	float netMass;
-	float netDamping;
-	bool netCollision;
-	float netBounciness;
-	float gravitation;
-
-	float basketScale;
-	int basketSegmnets;
+	double basketScale = 1.0;
+	int basketSegmnets = 10;
 	};
 #endif
