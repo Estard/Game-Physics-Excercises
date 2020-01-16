@@ -1,10 +1,43 @@
 #ifndef RIGIDBODYSYSTEMSIMULATOR_h
 #define RIGIDBODYSYSTEMSIMULATOR_h
 #include "Simulator.h"
-//add your header for your rigid body system, for e.g.,
-//#include "rigidBodySystem.h" 
-
+#include <vector>
 #define TESTCASEUSEDTORUNTEST 2
+
+
+struct RigidBody
+{
+	Vec3 position = Vec3();
+	Quat rotation = Quat(Vec3(1,0,0),0);
+	Vec3 linearVelocity = Vec3();
+	Vec3 angularVelocity = Vec3();
+	Vec3 angularMomentum = Vec3();
+	Vec3 force = Vec3();
+	Vec3 torque = Vec3();
+	Vec3 inverseInertia = Vec3(); //Diagonal of matrix
+	double mass = 1.;
+
+	virutal bool isSphere();
+};
+
+struct RigidSphere : public RigidBody
+{
+	double radius = .125;
+	bool isSphere();
+};
+
+struct RigidCube : public RigidBody
+{
+	Vec3 scale = Vec3();
+	bool isSphere();
+};
+
+
+struct Spring
+{
+    int massPoint1,massPoint2;
+};
+
 
 class RigidBodySystemSimulator:public Simulator{
 public:
@@ -34,9 +67,23 @@ public:
 
 private:
 	// Attributes
-	// add your RigidBodySystem data members, for e.g.,
-	// RigidBodySystem * m_pRigidBodySystem; 
+	// add your RigidBodySystem data members, for e.g., 
 	Vec3 m_externalForce;
+	std::vector<RigidSpheres> rigidSpheres;
+	std::vector<RigidCubes> rigidCubes;
+
+	double knotMass;
+	double knotRestingDistance;
+	double stiffness;
+	double bounciness;
+	double damping;
+	double ballMass;
+	double timeStep;
+
+	Vec3 calcInvInertiaSphere(float radius, float mass, bool solid = true);
+	Vec3 calcInvInertiaCube(Vec3 size, float mass);
+	void integrate(RigidBody &rb);
+
 
 	// UI Attributes
 	Point2D m_mouse;
