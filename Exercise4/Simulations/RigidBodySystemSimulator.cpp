@@ -1,7 +1,6 @@
-	#include "RigidBodySystemSimulator.h"
-
-
-#include <vector>
+#include "RigidBodySystemSimulator.h"
+#include "RigidBodySystemSimulator.h"
+#include "collisionDetect.h"
 
 
 struct RigidBody
@@ -200,4 +199,16 @@ void RigidBodySystemSimulator::setVelocityOf(int i, Vec3 velocity)
 	if (!(i < getNumberOfRigidBodies()))
 		return;
 	rigidBodies[i].linearVelocity = velocity;
+}
+
+CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody& a, RigidBody& b)
+{
+	if (a.isSphere() || b.isSphere())
+	{
+
+	}
+	else
+	{
+
+	}
 }
