@@ -51,7 +51,7 @@ public:
 
 	// ExtraFunctions
 	void applyForceOnBody(RigidBody& rb, Vec3 loc, Vec3 force);
-	void addRigidBody(Vec3 position, Vec3 size, double mass, std::string name, Quat rotation, bool isSphere, bool isStatic);
+	void addRigidBody(Vec3 position, Vec3 size, double mass, std::string name = "", bool isSphere = false, bool isStatic = false, Quat rotation = Quat(Vec3(1, 0, 0), 0));
 
 	CollisionInfo getCollision(RigidBody &a, RigidBody &b);
 
@@ -85,7 +85,7 @@ private:
 	double friction = 0.1;
 	bool netCollision = true;
 	double netBounciness = 0.0;
-	bool gravitation = true;
+	double gravitation = 10.0;
 	double ballMass = 10;
 	double ballScale = 1;
 	double timeStep = 0.01;

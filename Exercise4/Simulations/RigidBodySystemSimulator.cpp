@@ -33,7 +33,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	this->DUC = DUC;
 	rigidBodies.clear();
 
-	TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_BOOLCPP, &gravitation, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_DOUBLE, &gravitation, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep0", NULL);
 
 	TwAddButton(DUC->g_pTweakBar, "Remove balls", removeBasketballsCallback, NULL, NULL);
@@ -55,10 +55,10 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
+	addBasket(Vec3(0, 0.5, 15), basketScale, basketSegmnets);
 
-	addRigidBody(Vec3(1, 4, 2), Vec3(0.2, 2, 2), ballMass, "Ball", Quat(), true, false);
-
+	addRigidBody(Vec3(1, 4, 15), Vec3(0.2, 1, 1), ballMass, "Ball", true);
+	//addRigidBody(Vec3(0, 4, 2), Vec3(1, 1, 1), ballMass, "Ball1", false, false);
 }
 
 void RigidBodySystemSimulator::reset()
@@ -95,9 +95,7 @@ void RigidBodySystemSimulator::externalForcesCalculations(float timeElapsed) {}
 void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 {		
 		rb.linearVelocity += timeStep * rb.force / rb.mass;
-
 		rb.rotation = rb.rotation + (Quat(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z, 0) * rb.rotation) * .5 * timeStep;
-
 		rb.rotation = rb.rotation.unit();
 		rb.angularMomentum += timeStep * rb.torque;
 		
@@ -111,9 +109,8 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 
 		rb.position += timeStep * rb.linearVelocity;
 
-		rb.force = Vec3(0., gravitation?-10:0, 0);
+		rb.force = Vec3(0., gravitation*-1, 0);
 		rb.torque = Vec3(0.);
-
 }
 
 void RigidBodySystemSimulator::simulateTimestep(float timeStep)
@@ -145,7 +142,7 @@ void RigidBodySystemSimulator::applyForceOnBody(RigidBody &rb, Vec3 loc, Vec3 fo
 	rb.torque += cross(loc - rb.position, force);
 }
 
-void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, double mass, std::string name = "", Quat rotation = Quat(), bool isSphere = false, bool isStatic = false)
+void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, double mass, std::string name, bool isSphere, bool isStatic, Quat rotation)
 {
 	RigidBody rb{};
 	rb.position = position;
@@ -166,7 +163,10 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 	collision.collisionPointWorld = Vec3(0.0);
 	collision.normalWorld = Vec3(0.0);
 	collision.depth = 0.0;
-
+	if (a.isStatic && b.isStatic)
+	{
+		return collision;
+	}
 	if (a.isSphere || b.isSphere)
 	{
 		if (a.isSphere && b.isSphere)
@@ -188,7 +188,7 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 			collision = checkCollisionSphereCube(b, a);
 		}
 	}
-	else if(!(a.isStatic && b.isStatic))
+	else
 	{
 		auto rotA = a.rotation.getRotMat();
 		Mat4 scaleA;
@@ -233,7 +233,7 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 }
 
 void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segments) {
-	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.001, 200), netMass, "Floor", Quat(), false, true);
+	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.001, 200), netMass, "Floor", false, true);
 	float angle = 2. * M_PI / (double)segments;
 		for (int i = 0; i < ((segments >= 4) ? segments : 4); i++) {
 			RigidBody rb{};
@@ -242,12 +242,12 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 				+ Vec3(0., 0., 1 * scale) * cos(angle*i);
 			rb.scale = scale * Vec3(sin(angle / 2.) * 2., .1, .1);
 			rb.rotation = Quat(Vec3(1, 0, 0), M_PI * .25) * Quat(Vec3(0, 1, 0), 2 * M_PI * ((double)i / (double)segments));
-			addRigidBody(rb.position, rb.scale, netMass, "segment " + std::to_string(i), rb.rotation, false, true);
+			addRigidBody(rb.position, rb.scale, netMass, "segment " + std::to_string(i), false, true, rb.rotation);
 		}
 	RigidBody wall{};
 	wall.position = position + scale * Vec3(0, 0, 1.1);
 	wall.scale = scale * Vec3(3., 3., .1);
-	addRigidBody(wall.position, wall.scale, netMass, "wall", Quat(), false , true);
+	addRigidBody(wall.position, wall.scale, netMass, "wall", false , true);
 }
 
 // UI Callback Methods
