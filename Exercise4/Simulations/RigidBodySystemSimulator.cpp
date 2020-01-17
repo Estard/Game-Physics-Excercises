@@ -176,7 +176,7 @@ void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, int mass, 
 }
 
 
-CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody a, RigidBody b)
+CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 {
 	CollisionInfo collision = CollisionInfo{};
 	collision.isValid = false;
@@ -221,7 +221,7 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody a, RigidBody b)
 	return collision;
 }
 
-CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody sphere, RigidBody box)
+CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphere, RigidBody &box)
 {
 	CollisionInfo collision = CollisionInfo{};
 	collision.isValid = false;
