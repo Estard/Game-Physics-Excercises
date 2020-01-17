@@ -1,5 +1,35 @@
 #include "RigidBodySystemSimulator.h"
-#include "collisionDetect.h"
+
+
+Scalar dot(Quat &a, Quat &b)
+{
+	return a.dot(b);
+}
+
+Quat conjugate(Quat &q)
+{
+	return Quat(-q.x, -q.y, -q.z,q.w,);
+}
+
+Quat inverse(Quat &q)
+{
+	return conjugate(q) / dot(q, q);
+}
+
+Vec3 rotate(Quat &q, Vec3 &v)
+{
+	return q.getRotMat()*v;
+}
+Vec3 max(Vec3 &a, Vec3 &b)
+{
+	return Vec3(max(a.x,b.x),max(a.y,b.y),max(a.z,b.z));
+}
+
+Vec3 abs(Vec3 &a)
+{
+	return Vec3(abs(a.x),abs(a.y),abs(a.z));
+}
+
 
 Vec3 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, float mass)
 {
@@ -230,7 +260,6 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody spher
 	double y = std::max(minY, std::min(sphere.position.y, maxY));
 	double z = std::max(minZ, std::min(sphere.position.z, maxZ));
 
-		// this is the same as isPointInsideSphere
 	double distance = (x - sphere.position.x) * (x - sphere.position.x) +
 			(y - sphere.position.y) * (y - sphere.position.y) +
 			(z - sphere.position.z) * (z - sphere.position.z);
