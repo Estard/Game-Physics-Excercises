@@ -3,6 +3,7 @@
 #include "Simulator.h"
 #include "collisionDetect.h"
 #include <vector>
+#include <string>
 #define TESTCASEUSEDTORUNTEST 2
 
 
@@ -21,6 +22,7 @@ struct RigidBody
 
 	bool isSphere;
 	bool isStatic;
+	std::string name;
 };
 
 
@@ -49,7 +51,7 @@ public:
 
 	// ExtraFunctions
 	void applyForceOnBody(RigidBody& rb, Vec3 loc, Vec3 force);
-	void addRigidBody(Vec3 position, Vec3 size, int mass, Quat rotation, bool isSphere, bool isStatic);
+	void addRigidBody(Vec3 position, Vec3 size, double mass, std::string name, Quat rotation, bool isSphere, bool isStatic);
 
 	CollisionInfo getCollision(RigidBody &a, RigidBody &b);
 
@@ -68,8 +70,8 @@ private:
 	std::vector<Spring> springs;
 	std::vector<Vec3> leap;
 
-	Vec3 calcInvInertiaSphere(float radius, float mass, bool solid = true);
-	Vec3 calcInvInertiaCube(Vec3 size, float mass);
+	Vec3 calcInvInertiaSphere(double radius, double mass, bool solid = true);
+	Vec3 calcInvInertiaCube(Vec3 size, double mass);
 	void integrate(RigidBody &rb);
 
 

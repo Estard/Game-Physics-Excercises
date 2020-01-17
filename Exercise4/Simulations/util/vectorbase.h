@@ -811,7 +811,7 @@ inline const vector3Dim<Scalar> &
 vector3Dim<Scalar>::minimize(const vector3Dim<Scalar> &pnt)
 {
   for (unsigned int i = 0; i < 3; i++)
-    value[i] = MIN(value[i],pnt[i]);
+      value[i] = value[i] > pnt[i] ? pnt[i] : value[i];
   return *this;
 }
 
@@ -827,8 +827,8 @@ template<class Scalar>
 inline const vector3Dim<Scalar> &
 vector3Dim<Scalar>::maximize(const vector3Dim<Scalar> &pnt)
 {
-  for (unsigned int i = 0; i < 3; i++)
-    value[i] = MAX(value[i],pnt[i]);
+    for (unsigned int i = 0; i < 3; i++)
+        value[i] = value[i] < pnt[i] ? pnt[i] : value[i];
   return *this;
 }
 
