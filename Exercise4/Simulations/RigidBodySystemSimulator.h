@@ -54,6 +54,7 @@ public:
 	void addRigidBody(Vec3 position, Vec3 size, double mass, std::string name = "", bool isSphere = false, bool isStatic = false, Quat rotation = Quat(Vec3(1, 0, 0), 0));
 
 	CollisionInfo getCollision(RigidBody &a, RigidBody &b);
+	void resolveCollision(RigidBody &a,RigidBody &b, CollisionInfo &ci);
 
 	CollisionInfo checkCollisionSphereCube(RigidBody &sphere, RigidBody &box);
 
