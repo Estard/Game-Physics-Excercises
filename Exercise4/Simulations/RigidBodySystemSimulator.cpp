@@ -190,14 +190,18 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 	}
 	else if(!(a.isStatic && b.isStatic))
 	{
-		GamePhysics::Mat4 matA = a.rotation.getRotMat();
-		matA.initScaling(a.scale.x, a.scale.y, a.scale.z);
-		matA.initTranslation(a.position.x, a.position.y, a.position.z);
+		auto rotA = a.rotation.getRotMat();
+		Mat4 scaleA;
+		scaleA.initScaling(a.scale.x, a.scale.y, a.scale.z);
+		Mat4 translateA;
+		translateA.initTranslation(a.position.x, a.position.y, a.position.z);
 
-		GamePhysics::Mat4 matB = b.rotation.getRotMat();
-		matB.initScaling(b.scale.x, b.scale.y, b.scale.z);
-		matB.initTranslation(b.position.x, b.position.y, b.position.z);
-		collision = checkCollisionSAT(matB, matA);
+		auto rotB = b.rotation.getRotMat();
+		Mat4 scaleB;
+		scaleB.initScaling(b.scale.x, b.scale.y, b.scale.z);
+		Mat4 translateB;
+		translateB.initTranslation(b.position.x, b.position.y, b.position.z);
+		collision = checkCollisionSAT(rotA*scaleA*translateA, rotB*scaleB*translateB);
 	}
 	if (collision.isValid)
 		std::cout << "Collision between " << a.name << " and " << b.name<< std::endl;
