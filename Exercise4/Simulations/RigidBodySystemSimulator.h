@@ -86,10 +86,11 @@ private:
 	double friction = 0.1;
 	bool netCollision = true;
 	double netBounciness = 0.0;
-	double gravitation = 10.0;
+	double gravitation = 1.0;
 	double ballMass = 10;
 	double ballScale = 1;
 	double timeStep = 0.01;
+	double elasticity = 1.0;
 
 	double basketScale = 1.0;
 	int basketSegmnets = 10;

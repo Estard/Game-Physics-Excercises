@@ -55,9 +55,9 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	addBasket(Vec3(0, 0.5, 15), basketScale, basketSegmnets);
+	addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
 
-	addRigidBody(Vec3(1, 4, 15), Vec3(0.2, 1, 1), ballMass, "Ball", true);
+	addRigidBody(Vec3(1, 4, 2), Vec3(0.5, 0.5, 0.5), ballMass, "Ball", false);
 	//addRigidBody(Vec3(0, 4, 2), Vec3(1, 1, 1), ballMass, "Ball1", false, false);
 }
 
@@ -126,7 +126,7 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 		for (int j = i + 1; j < rigidBodies.size(); j++)
 		{
 			auto ci = getCollision(rigidBodies[i], rigidBodies[j]);
-			void resolveCollision(rigidBodies[i], rigidBodies[j], ci);
+			resolveCollision(rigidBodies[i], rigidBodies[j], ci);
 		}
 	}
 }
@@ -206,7 +206,7 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 		collision = checkCollisionSAT(rotA*scaleA*translateA, rotB*scaleB*translateB);
 	}
 	if (collision.isValid)
-		std::cout << "Collision between " << a.name << " and " << b.name<< std::endl;
+		std::cout << "Collision between " << a.name << " and " << b.name << " at " << collision.collisionPointWorld.toString() << std::endl;
 	return collision;
 }
 
@@ -233,9 +233,9 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	return collision;
 }
 
-void RigidBodySytemSimulator::resolveCollision(RigidBody &a,RigidBody &b, CollisionInfo &ci)
+void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, CollisionInfo &ci)
 {
-	if(!ci.isValid)
+	if (!ci.isValid)
 		return;
 	Vec3 middleAToPoint = ci.collisionPointWorld - a.position;
 	Vec3 middleBToPoint = ci.collisionPointWorld - b.position;
@@ -245,8 +245,28 @@ void RigidBodySytemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Collis
 
 	Vec3 vrel = velA-velB;
 
-	//TODO: Calculate Impulse 
+	double relVelonNormal = dot(vrel, ci.normalWorld);
+	if (relVelonNormal > 0.0) //already seperating
+		return;
 
+	double numerator = -(1.0f + elasticity) * relVelonNormal;
+	double inverseMasses = (a.isStatic ? 0 : (1.0 / a.mass)) + (b.isStatic ? 0 : (1.0 / b.mass));
+	
+	Vec3 xaN = cross(middleAToPoint, ci.normalWorld) * a.inverseInertia;
+	Vec3 xbN = cross(middleBToPoint, ci.normalWorld) * b.inverseInertia;
+	double xaN2 = dot(xaN, xaN);
+	double xbN2 = dot(xbN, xbN);
+	double denominator = inverseMasses + xaN2 + xbN2;
+
+	double impulse = numerator / denominator;
+
+	Vec3 impulseNormal = impulse * ci.normalWorld;
+
+	a.linearVelocity += (a.isStatic ? Vec3(0.) : (impulseNormal / a.mass));
+	b.linearVelocity -= (b.isStatic ? Vec3(0.) : (impulseNormal / b.mass));
+
+	a.angularMomentum += cross(middleAToPoint, impulseNormal);
+	b.angularMomentum -= cross(middleBToPoint, impulseNormal);
 }
 
 void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segments) {

@@ -227,7 +227,7 @@ namespace collisionTools{
 	{
 		std::vector<XMVECTOR> corners = getCorners(obj2World);
 		float min = 1000;
-		XMVECTOR vertex;
+		XMVECTOR vertex = XMVECTOR();
 		for (int i = 0; i < corners.size(); i++)
 		{
 			float value = XMVectorGetX(XMVector3Dot(corners[i], toCenter));
