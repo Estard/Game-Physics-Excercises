@@ -65,9 +65,10 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
+	//addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
 
-	addRigidBody(Vec3(0.9, 2, 2), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", true);
+	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.001, 200), netMass, "Floor", false, true);
+	addRigidBody(Vec3(0.9, 2, 2), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", false);
 	//addRigidBody(Vec3(0, -0.5, 0), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", false, true);
 }
 
@@ -83,7 +84,7 @@ void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateConte
 		if (rb.isSphere) {
 			DUC->drawSphere(rb.position, Vec3(rb.scale.x));
 		}
-		else
+		else if (rb.name.compare("Floor"))
 		{
 			auto rot = rb.rotation.getRotMat();
 			Mat4 scale;
@@ -221,6 +222,7 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 		Mat4 translateB;
 		translateB.initTranslation(b.position.x, b.position.y, b.position.z);
 		collision = checkCollisionSAT(rotA*scaleA*translateA, rotB*scaleB*translateB);
+		collision.normalWorld *= -1;
 	}
 	/*if (collision.isValid)
 		std::cout << "Collision between " << a.name << " and " << b.name << " at " << collision.collisionPointWorld.toString() << std::endl;*/
@@ -300,12 +302,9 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 
 	a.angularMomentum += (a.isStatic ? Vec3(0.) : cross(middleAToPoint, impulseNormal));
 	b.angularMomentum -= (b.isStatic ? Vec3(0.) : cross(middleBToPoint, impulseNormal));
-
-	std::cout << "Collision!!" << std::endl;
 }
 
 void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segments) {
-	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.001, 200), netMass, "Floor", false, true);
 	float angle = 2. * M_PI / (double)segments;
 		for (int i = 0; i < ((segments >= 4) ? segments : 4); i++) {
 			RigidBody rb{};
