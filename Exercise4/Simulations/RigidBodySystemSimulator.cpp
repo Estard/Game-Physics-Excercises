@@ -125,7 +125,8 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 	{
 		for (int j = i + 1; j < rigidBodies.size(); j++)
 		{
-			getCollision(rigidBodies[i], rigidBodies[j]);
+			auto ci = getCollision(rigidBodies[i], rigidBodies[j]);
+			void resolveCollision(rigidBodies[i], rigidBodies[j], ci);
 		}
 	}
 }
@@ -230,6 +231,22 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	}
 	
 	return collision;
+}
+
+void RigidBodySytemSimulator::resolveCollision(RigidBody &a,RigidBody &b, CollisionInfo &ci)
+{
+	if(!ci.isValid)
+		return;
+	Vec3 middleAToPoint = ci.collisionPointWorld - a.position;
+	Vec3 middleBToPoint = ci.collisionPointWorld - b.position;
+
+	Vec3 velA = a.linearVelocity + cross(a.angularVelocity,middleAToPoint);
+	Vec3 velB = b.linearVelocity + cross(b.angularVelocity,middleBToPoint);
+
+	Vec3 vrel = velA-velB;
+
+	//TODO: Calculate Impulse 
+
 }
 
 void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segments) {
