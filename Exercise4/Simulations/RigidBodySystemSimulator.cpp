@@ -39,6 +39,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	TwAddButton(DUC->g_pTweakBar, "Remove balls", removeBasketballsCallback, NULL, NULL);
 	TwAddVarRW(DUC->g_pTweakBar, "Ball Mass", TW_TYPE_DOUBLE, &ballMass, "min=0.001 max=100");
 	TwAddVarRW(DUC->g_pTweakBar, "Ball Scale", TW_TYPE_DOUBLE, &ballScale, "min=0.001 max=100");
+	TwAddVarRW(DUC->g_pTweakBar, "Elasticity", TW_TYPE_DOUBLE, &elasticity, "min=0.0 max=1.0");
 	TwAddSeparator(DUC->g_pTweakBar, "sep1", NULL);
 
 	TwAddVarRW(DUC->g_pTweakBar, "Net Mass", TW_TYPE_DOUBLE, &netMass, "min=0.0001");
@@ -55,10 +56,10 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
+	//addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
 
-	addRigidBody(Vec3(1, 4, 2), Vec3(0.5, 0.5, 0.5), ballMass, "Ball", false);
-	//addRigidBody(Vec3(0, 4, 2), Vec3(1, 1, 1), ballMass, "Ball1", false, false);
+	addRigidBody(Vec3(0.2, 1, 0), Vec3(0.5, 0.5, 0.5), ballMass, "Ball", true);
+	addRigidBody(Vec3(0, -1, 0), Vec3(0.5, 1, 1), ballMass, "Ball1", true, true);
 }
 
 void RigidBodySystemSimulator::reset()
@@ -240,33 +241,36 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 	Vec3 middleAToPoint = ci.collisionPointWorld - a.position;
 	Vec3 middleBToPoint = ci.collisionPointWorld - b.position;
 
-	Vec3 velA = a.linearVelocity + cross(a.angularVelocity,middleAToPoint);
-	Vec3 velB = b.linearVelocity + cross(b.angularVelocity,middleBToPoint);
+	Vec3 velA = a.linearVelocity + cross(a.angularVelocity, middleAToPoint);
+	Vec3 velB = b.linearVelocity + cross(b.angularVelocity, middleBToPoint);
 
-	Vec3 vrel = velA-velB;
+	Vec3 vrel = (velA - velB) * (-(1.0 + elasticity));
 
 	double relVelonNormal = dot(vrel, ci.normalWorld);
-	if (relVelonNormal > 0.0) //already seperating
+	if (relVelonNormal < 0.0) //already seperating
 		return;
 
-	double numerator = -(1.0f + elasticity) * relVelonNormal;
 	double inverseMasses = (a.isStatic ? 0 : (1.0 / a.mass)) + (b.isStatic ? 0 : (1.0 / b.mass));
 	
-	Vec3 xaN = cross(middleAToPoint, ci.normalWorld) * a.inverseInertia;
-	Vec3 xbN = cross(middleBToPoint, ci.normalWorld) * b.inverseInertia;
-	double xaN2 = dot(xaN, xaN);
-	double xbN2 = dot(xbN, xbN);
-	double denominator = inverseMasses + xaN2 + xbN2;
+	Mat4 invInertiaA, invA, invB;
 
-	double impulse = numerator / denominator;
+	invA.initScaling(a.inverseInertia.x, a.inverseInertia.y, a.inverseInertia.z);
+	invB.initScaling(b.inverseInertia.x, b.inverseInertia.y, b.inverseInertia.z);
+
+	Vec3 xaN = invA.transformVector(cross(middleAToPoint, ci.normalWorld));
+	Vec3 xbN = invB.transformVector(cross(middleBToPoint, ci.normalWorld));
+
+	double xabN2 = dot(xaN + xbN, ci.normalWorld);
+	double denominator = inverseMasses + xabN2;
+	double impulse = relVelonNormal / denominator;
 
 	Vec3 impulseNormal = impulse * ci.normalWorld;
 
 	a.linearVelocity += (a.isStatic ? Vec3(0.) : (impulseNormal / a.mass));
 	b.linearVelocity -= (b.isStatic ? Vec3(0.) : (impulseNormal / b.mass));
 
-	a.angularMomentum += cross(middleAToPoint, impulseNormal);
-	b.angularMomentum -= cross(middleBToPoint, impulseNormal);
+	a.angularMomentum += (a.isStatic ? Vec3(0.) : cross(middleAToPoint, impulseNormal));
+	b.angularMomentum -= (b.isStatic ? Vec3(0.) : cross(middleBToPoint, impulseNormal));
 }
 
 void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segments) {
