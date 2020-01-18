@@ -3,6 +3,33 @@
 Vec3 lastPoint = Vec3();
 Vec3 lastNormal = Vec3();
 
+
+
+
+Mat4 quatToRot(Quat const& q)
+{
+	Mat4 Result;
+	double qxx=(q.x * q.x);
+	double qyy=(q.y * q.y);
+	double qzz=(q.z * q.z);
+	double qxz=(q.x * q.z);
+	double qxy=(q.x * q.y);
+	double qyz=(q.y * q.z);
+	double qwx=(q.w * q.x);
+	double qwy=(q.w * q.y);
+	double qwz=(q.w * q.z);
+	Result[0][0] = (1) - (2) * (qyy +  qzz);
+	Result[0][1] = (2) * (qxy + qwz);
+	Result[0][2] = (2) * (qxz - qwy);
+	Result[1][0] = (2) * (qxy - qwz);
+	Result[1][1] = (1) - (2) * (qxx +  qzz);
+	Result[1][2] = (2) * (qyz + qwx);
+	Result[2][0] = (2) * (qxz + qwy);
+	Result[2][1] = (2) * (qyz - qwx);
+	Result[2][2] = (1) - (2) * (qxx +  qyy);
+	return Result;
+}
+
 Mat4 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, double mass)
 {
 	double factor = mass / 12.;
