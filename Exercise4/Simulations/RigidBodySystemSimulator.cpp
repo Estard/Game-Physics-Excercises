@@ -1,21 +1,30 @@
 #include "RigidBodySystemSimulator.h"
 
-Vec3 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, double mass)
+Vec3 lastPoint = Vec3();
+Vec3 lastNormal = Vec3();
+
+Mat4 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, double mass)
 {
 	double factor = mass / 12.;
 	double w2 = size.x * size.x;
 	double h2 = size.y * size.y;
 	double d2 = size.z * size.z;
-	return Vec3(1. / (factor * (h2 + d2)),
+	Vec3 scale = Vec3(1. / (factor * (h2 + d2)),
 		1. / (factor * (w2 + d2)),
 		1. / (factor * (h2 + w2)));
+	Mat4 ret;
+	ret.initScaling(scale.x, scale.y, scale.z);
+	return ret;
 }
 
-Vec3 RigidBodySystemSimulator::calcInvInertiaSphere(double radius, double mass, bool solid)
+Mat4 RigidBodySystemSimulator::calcInvInertiaSphere(double radius, double mass, bool solid)
 {
 	double mrr = mass*radius*radius;
 	double factor = solid?5.:3.;
-	return Vec3((1./mrr)*.5*factor);
+	Mat4 ret;
+	Vec3 scale = Vec3((1. / mrr) * .5 * factor);
+	ret.initScaling(scale.x, scale.y, scale.z);
+	return ret;
 }
 
 // Construtors
@@ -56,10 +65,10 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	//addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
+	addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
 
-	addRigidBody(Vec3(0.2, 1, 0), Vec3(0.5, 0.5, 0.5), ballMass, "Ball", true);
-	addRigidBody(Vec3(0, -1, 0), Vec3(0.5, 1, 1), ballMass, "Ball1", true, true);
+	addRigidBody(Vec3(0.9, 2, 2), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", true);
+	//addRigidBody(Vec3(0, -0.5, 0), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", false, true);
 }
 
 void RigidBodySystemSimulator::reset()
@@ -84,6 +93,9 @@ void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateConte
 			DUC->drawRigidBody(scale * rot * translate);
 		}
 	}
+	DUC->beginLine();
+	DUC->drawLine(lastPoint, Vec3(1, 0, 0), lastPoint + lastNormal, Vec3(0, 1, 0));
+	DUC->endLine();
 }
 
 void RigidBodySystemSimulator::notifyCaseChanged(int testCase)
@@ -94,7 +106,7 @@ void RigidBodySystemSimulator::notifyCaseChanged(int testCase)
 void RigidBodySystemSimulator::externalForcesCalculations(float timeElapsed) {}
 
 void  RigidBodySystemSimulator::integrate(RigidBody &rb)
-{		
+{
 		rb.linearVelocity += timeStep * rb.force / rb.mass;
 		rb.rotation = rb.rotation + (Quat(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z, 0) * rb.rotation) * .5 * timeStep;
 		rb.rotation = rb.rotation.unit();
@@ -102,15 +114,14 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 		
 		Mat4 Rot = rb.rotation.getRotMat();
 		Mat4 RotT = Rot.inverse();
-		Mat4 tmp;
-		tmp.initScaling(rb.inverseInertia.x, rb.inverseInertia.y, rb.inverseInertia.z);
-		Mat4 Im1 = Rot * tmp * RotT;
+		Mat4 Im1 = Rot * rb.inverseInertia * RotT;
+		rb.inverseInertiaT = Im1;
 
 		rb.angularVelocity = Im1 * rb.angularMomentum;
 
 		rb.position += timeStep * rb.linearVelocity;
 
-		rb.force = Vec3(0., gravitation*-1, 0);
+		rb.force = Vec3(0., -gravitation * rb.mass, 0);
 		rb.torque = Vec3(0.);
 }
 
@@ -170,25 +181,30 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 	{
 		return collision;
 	}
+
 	if (a.isSphere || b.isSphere)
 	{
 		if (a.isSphere && b.isSphere)
 		{
-			double distance = norm(a.position - b.position);
+			double distance = norm(b.position - a.position);
 			collision.isValid = distance < (a.scale.x + b.scale.x);
+			collision.depth = ((a.scale.x + b.scale.x) - distance) / 2;
 			if (collision.isValid)
 			{
-				collision.collisionPointWorld = a.position + (b.position - a.position) / 2;
+				collision.collisionPointWorld = a.position + normalize(b.position - a.position) * (a.scale.x - collision.depth);
 				collision.normalWorld = getNormalized(a.position - b.position);
 			}
 		}
-		if (a.isSphere)
-		{
-			collision = checkCollisionSphereCube(a, b);
-		}
-		else
-		{
-			collision = checkCollisionSphereCube(b, a);
+		else {
+			if (a.isSphere)
+			{
+				collision = checkCollisionSphereCube(a, b);
+			}
+			else
+			{
+				collision = checkCollisionSphereCube(b, a);
+				collision.normalWorld *= -1;
+			}
 		}
 	}
 	else
@@ -206,8 +222,13 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 		translateB.initTranslation(b.position.x, b.position.y, b.position.z);
 		collision = checkCollisionSAT(rotA*scaleA*translateA, rotB*scaleB*translateB);
 	}
-	if (collision.isValid)
-		std::cout << "Collision between " << a.name << " and " << b.name << " at " << collision.collisionPointWorld.toString() << std::endl;
+	/*if (collision.isValid)
+		std::cout << "Collision between " << a.name << " and " << b.name << " at " << collision.collisionPointWorld.toString() << std::endl;*/
+	if (collision.isValid && lastPoint.x == 0)
+	{
+		lastPoint = collision.collisionPointWorld;
+		lastNormal = collision.normalWorld;
+	}
 	return collision;
 }
 
@@ -220,7 +241,7 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	collision.depth = 0.0;
 	Vec3 sphereMiddleRtoBox = sphere.position - box.position;
 	Mat4 matBox = box.rotation.getRotMat().inverse();
-	sphereMiddleRtoBox = matBox.transformVector(sphereMiddleRtoBox);
+	sphereMiddleRtoBox = matBox * (sphereMiddleRtoBox);
 	Vec3 distVec = sphereMiddleRtoBox.getAbsolutes() - (box.scale/2);
 	distVec = distVec.maximize(Vec3(0.));
 	if (norm(distVec) < sphere.scale.x)
@@ -252,25 +273,34 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 
 	double inverseMasses = (a.isStatic ? 0 : (1.0 / a.mass)) + (b.isStatic ? 0 : (1.0 / b.mass));
 	
-	Mat4 invInertiaA, invA, invB;
-
-	invA.initScaling(a.inverseInertia.x, a.inverseInertia.y, a.inverseInertia.z);
-	invB.initScaling(b.inverseInertia.x, b.inverseInertia.y, b.inverseInertia.z);
+	Mat4 invA, invB;
+	if (!a.isStatic)
+		invA = a.inverseInertiaT;
+	if (!b.isStatic)
+		invB = b.inverseInertiaT;
 
 	Vec3 xaN = invA.transformVector(cross(middleAToPoint, ci.normalWorld));
 	Vec3 xbN = invB.transformVector(cross(middleBToPoint, ci.normalWorld));
 
+	xaN = cross(xaN, middleAToPoint);
+	xbN = cross(xbN, middleBToPoint);
 	double xabN2 = dot(xaN + xbN, ci.normalWorld);
 	double denominator = inverseMasses + xabN2;
 	double impulse = relVelonNormal / denominator;
 
 	Vec3 impulseNormal = impulse * ci.normalWorld;
+	if(!a.isStatic)
+		a.position += (ci.normalWorld * ci.depth) / (b.isStatic ? 1 : 2);
+	if(!b.isStatic)
+		b.position -= (ci.normalWorld * ci.depth) / (a.isStatic ? 1 : 2);
 
 	a.linearVelocity += (a.isStatic ? Vec3(0.) : (impulseNormal / a.mass));
 	b.linearVelocity -= (b.isStatic ? Vec3(0.) : (impulseNormal / b.mass));
 
 	a.angularMomentum += (a.isStatic ? Vec3(0.) : cross(middleAToPoint, impulseNormal));
 	b.angularMomentum -= (b.isStatic ? Vec3(0.) : cross(middleBToPoint, impulseNormal));
+
+	std::cout << "Collision!!" << std::endl;
 }
 
 void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segments) {
@@ -283,7 +313,7 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 				+ Vec3(0., 0., 1 * scale) * cos(angle*i);
 			rb.scale = scale * Vec3(sin(angle / 2.) * 2., .1, .1);
 			rb.rotation = Quat(Vec3(1, 0, 0), M_PI * .25) * Quat(Vec3(0, 1, 0), 2 * M_PI * ((double)i / (double)segments));
-			addRigidBody(rb.position, rb.scale, netMass, "segment " + std::to_string(i), false, true, rb.rotation);
+			addRigidBody(rb.position, Vec3(0.1, 0, 0), netMass, "segment " + std::to_string(i), true, true, rb.rotation);
 		}
 	RigidBody wall{};
 	wall.position = position + scale * Vec3(0, 0, 1.1);

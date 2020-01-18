@@ -17,7 +17,8 @@ struct RigidBody
 	Vec3 angularMomentum = Vec3();
 	Vec3 force = Vec3();
 	Vec3 torque = Vec3();
-	Vec3 inverseInertia = Vec3(); //Diagonal of matrix
+	Mat4 inverseInertia = Mat4(); //Diagonal of matrix
+	Mat4 inverseInertiaT = Mat4();
 	double mass = 1.;
 
 	bool isSphere;
@@ -71,8 +72,8 @@ private:
 	std::vector<Spring> springs;
 	std::vector<Vec3> leap;
 
-	Vec3 calcInvInertiaSphere(double radius, double mass, bool solid = true);
-	Vec3 calcInvInertiaCube(Vec3 size, double mass);
+	Mat4 calcInvInertiaSphere(double radius, double mass, bool solid = true);
+	Mat4 calcInvInertiaCube(Vec3 size, double mass);
 	void integrate(RigidBody &rb);
 
 
@@ -86,13 +87,13 @@ private:
 	double friction = 0.1;
 	bool netCollision = true;
 	double netBounciness = 0.0;
-	double gravitation = 10.0;
+	double gravitation = 1.0;
 	double ballMass = 10;
 	double ballScale = 1;
 	double timeStep = 0.01;
-	double elasticity = 0.0;
+	double elasticity = 1.0;
 
 	double basketScale = 1.0;
-	int basketSegmnets = 10;
+	int basketSegmnets = 50;
 	};
 #endif
