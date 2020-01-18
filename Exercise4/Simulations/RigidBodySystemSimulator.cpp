@@ -3,9 +3,6 @@
 Vec3 lastPoint = Vec3();
 Vec3 lastNormal = Vec3();
 
-
-
-
 Mat4 quatToRot(Quat const& q)
 {
 	Mat4 Result;
@@ -18,15 +15,15 @@ Mat4 quatToRot(Quat const& q)
 	double qwx=(q.w * q.x);
 	double qwy=(q.w * q.y);
 	double qwz=(q.w * q.z);
-	Result[0][0] = (1) - (2) * (qyy +  qzz);
-	Result[0][1] = (2) * (qxy + qwz);
-	Result[0][2] = (2) * (qxz - qwy);
-	Result[1][0] = (2) * (qxy - qwz);
-	Result[1][1] = (1) - (2) * (qxx +  qzz);
-	Result[1][2] = (2) * (qyz + qwx);
-	Result[2][0] = (2) * (qxz + qwy);
-	Result[2][1] = (2) * (qyz - qwx);
-	Result[2][2] = (1) - (2) * (qxx +  qyy);
+	Result.value[0][0] = (1) - (2) * (qyy +  qzz);
+	Result.value[0][1] = (2) * (qxy + qwz);
+	Result.value[0][2] = (2) * (qxz - qwy);
+	Result.value[1][0] = (2) * (qxy - qwz);
+	Result.value[1][1] = (1) - (2) * (qxx +  qzz);
+	Result.value[1][2] = (2) * (qyz + qwx);
+	Result.value[2][0] = (2) * (qxz + qwy);
+	Result.value[2][1] = (2) * (qyz - qwx);
+	Result.value[2][2] = (1) - (2) * (qxx +  qyy);
 	return Result;
 }
 
@@ -92,7 +89,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	//addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
+	addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
 
 	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.001, 200), netMass, "Floor", false, true);
 	addRigidBody(Vec3(0.9, 2, 2), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", false);
@@ -102,6 +99,8 @@ void RigidBodySystemSimulator::initScene()
 void RigidBodySystemSimulator::reset()
 {
 	rigidBodies.clear();
+	lastPoint = Vec3();
+	lastNormal = Vec3();
 	initScene();
 }
 
@@ -140,7 +139,7 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 		rb.rotation = rb.rotation.unit();
 		rb.angularMomentum += timeStep * rb.torque;
 		
-		Mat4 Rot = rb.rotation.getRotMat();
+		Mat4 Rot = quatToRot(rb.rotation);
 		Mat4 RotT = Rot.inverse();
 		Mat4 Im1 = Rot * rb.inverseInertia * RotT;
 		rb.inverseInertiaT = Im1;
@@ -237,13 +236,13 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 	}
 	else
 	{
-		auto rotA = a.rotation.getRotMat();
+		auto rotA = quatToRot(a.rotation);
 		Mat4 scaleA;
 		scaleA.initScaling(a.scale.x, a.scale.y, a.scale.z);
 		Mat4 translateA;
 		translateA.initTranslation(a.position.x, a.position.y, a.position.z);
 
-		auto rotB = b.rotation.getRotMat();
+		auto rotB = quatToRot(b.rotation);
 		Mat4 scaleB;
 		scaleB.initScaling(b.scale.x, b.scale.y, b.scale.z);
 		Mat4 translateB;
@@ -269,7 +268,7 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	collision.normalWorld = Vec3(0.0);
 	collision.depth = 0.0;
 	Vec3 sphereMiddleRtoBox = sphere.position - box.position;
-	Mat4 matBox = box.rotation.getRotMat().inverse();
+	Mat4 matBox = quatToRot(box.rotation).inverse();
 	sphereMiddleRtoBox = matBox * (sphereMiddleRtoBox);
 	Vec3 distVec = sphereMiddleRtoBox.getAbsolutes() - (box.scale/2);
 	distVec = distVec.maximize(Vec3(0.));
@@ -277,7 +276,7 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	{
 		collision.depth = sphere.scale.x - norm(distVec)*.5;
 		collision.isValid = true;
-		distVec = box.rotation.getRotMat().transformVector(distVec * Vec3(sphereMiddleRtoBox.x < 0 ? -1 : 1, sphereMiddleRtoBox.y < 0 ? -1 : 1, sphereMiddleRtoBox.z < 0 ? -1 : 1));
+		distVec = quatToRot(box.rotation).transformVector(distVec * Vec3(sphereMiddleRtoBox.x < 0 ? -1 : 1, sphereMiddleRtoBox.y < 0 ? -1 : 1, sphereMiddleRtoBox.z < 0 ? -1 : 1));
 		collision.collisionPointWorld = sphere.position - distVec;
 		collision.normalWorld = normalize(distVec);
 	}
