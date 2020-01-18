@@ -132,6 +132,7 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 
 void RigidBodySystemSimulator::onClick(int x, int y) {
 }
+
 void RigidBodySystemSimulator::onMouse(int x, int y) {
 }
 
@@ -216,7 +217,7 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	collision.normalWorld = Vec3(0.0);
 	collision.depth = 0.0;
 	Vec3 sphereMiddleRtoBox = sphere.position - box.position;
-	GamePhysics::Mat4 matBox = box.rotation.getRotMat().inverse();
+	Mat4 matBox = box.rotation.getRotMat().inverse();
 	sphereMiddleRtoBox = matBox.transformVector(sphereMiddleRtoBox);
 	Vec3 distVec = sphereMiddleRtoBox.getAbsolutes() - (box.scale/2);
 	distVec = distVec.maximize(Vec3(0.));
@@ -226,7 +227,6 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 		distVec = box.rotation.getRotMat().transformVector(distVec * Vec3(sphereMiddleRtoBox.x < 0 ? -1 : 1, sphereMiddleRtoBox.y < 0 ? -1 : 1, sphereMiddleRtoBox.z < 0 ? -1 : 1));
 		collision.collisionPointWorld = sphere.position - distVec;
 		collision.normalWorld = normalize(distVec);
-
 	}
 	
 	return collision;
