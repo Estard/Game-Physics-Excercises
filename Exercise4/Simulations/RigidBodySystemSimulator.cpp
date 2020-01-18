@@ -246,6 +246,7 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	distVec = distVec.maximize(Vec3(0.));
 	if (norm(distVec) < sphere.scale.x)
 	{
+		collision.depth = sphere.scale.x - norm(distVec)*.5;
 		collision.isValid = true;
 		distVec = box.rotation.getRotMat().transformVector(distVec * Vec3(sphereMiddleRtoBox.x < 0 ? -1 : 1, sphereMiddleRtoBox.y < 0 ? -1 : 1, sphereMiddleRtoBox.z < 0 ? -1 : 1));
 		collision.collisionPointWorld = sphere.position - distVec;
