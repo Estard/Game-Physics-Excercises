@@ -212,15 +212,15 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 		{
 			auto ci = getCollision(rigidBodies[i], rigidBodies[j]);
 			if ((rigidBodies[i].name.compare("hitzone") == 0) && (rigidBodies[j].name.substr(0,4).compare("Ball")==0)) {
-				if (std::find(marked.begin(),marked.end(),rigidBodies[j].name) == marked.end()) {
-					marked.push_back(rigidBodies[j].name);
+				if (std::find(marked.begin(),marked.end(),j) == marked.end()) {
+					marked.push_back(j);
 					score++;
 					std::cout << score << "\n";
 				}
 			}
 			else if ((rigidBodies[j].name.compare("hitzone") == 0) && (rigidBodies[i].name.substr(0, 4).compare("Ball") == 0)) {
-				if (std::find(marked.begin(), marked.end(), rigidBodies[i].name) == marked.end()) {
-					marked.push_back(rigidBodies[i].name);
+				if (std::find(marked.begin(), marked.end(), i) == marked.end()) {
+					marked.push_back(i);
 					score++;
 					std::cout << score << "\n";
 				}
@@ -497,6 +497,8 @@ void RigidBodySystemSimulator::removeBasketballs()
 {
 	auto it = std::remove_if(rigidBodies.begin(), rigidBodies.end(), isBall);
 	rigidBodies.erase(it, rigidBodies.end());
+	marked.clear();
+	anzahlBall = 0;
 }
 
 
