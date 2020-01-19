@@ -65,6 +65,7 @@ public:
 
 	// UI Callbacks
 	static void TW_CALL removeBasketballsCallback(void* optionalData);
+	void removeBasketballs();
 
 private:
 	// Attributes

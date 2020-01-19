@@ -100,7 +100,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_DOUBLE, &gravitation, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep0", NULL);
 
-	TwAddButton(DUC->g_pTweakBar, "Remove balls", removeBasketballsCallback, &rigidBodies, NULL);
+	TwAddButton(DUC->g_pTweakBar, "Remove balls", removeBasketballsCallback, this, NULL);
 	TwAddVarRW(DUC->g_pTweakBar, "Ball Mass", TW_TYPE_DOUBLE, &ballMass, "min=0.001 max=100");
 	TwAddVarRW(DUC->g_pTweakBar, "Ball Scale", TW_TYPE_DOUBLE, &ballScale, "min=0.001 max=100");
 	TwAddVarRW(DUC->g_pTweakBar, "Elasticity", TW_TYPE_DOUBLE, &elasticity, "min=0.0 max=1.0");
@@ -421,6 +421,14 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 // UI Callback Methods
 void TW_CALL RigidBodySystemSimulator::removeBasketballsCallback(void* optionalData) {
 
-	std::vector<RigidBody>& rigidBodies = static_cast<std::vector<RigidBody>*>(optionalData);
-	std::remove(rigidBodies.begin(), rigidBodies.end(), isBall);
+	RigidBodySystemSimulator* rbss = static_cast<RigidBodySystemSimulator*>(optinalData);
+	rbss->removeBasketballs();
 }
+
+void RigidBodySystemSimulator::removeBasketballs()
+{
+	std::remove(rigidBodies.begin(), rigidBodies.end(), isBall);	
+}
+
+
+
