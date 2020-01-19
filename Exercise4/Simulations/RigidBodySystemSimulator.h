@@ -95,6 +95,7 @@ private:
 	double ballScale = 1;
 	double timeStep = 0.01;
 	double elasticity = 0.9;
+	double stiffness = 40.;
 
 	double basketScale = 1.0;
 	int basketSegmnets = 50;

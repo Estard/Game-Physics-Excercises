@@ -107,6 +107,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	TwAddSeparator(DUC->g_pTweakBar, "sep1", NULL);
 
 	TwAddVarRW(DUC->g_pTweakBar, "Net Mass", TW_TYPE_DOUBLE, &netMass, "min=0.0001");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Stiffness", TW_TYPE_DOUBLE, &stiffness, "min=3");
 	TwAddSeparator(DUC->g_pTweakBar, "sep2", NULL);
 
 	TwAddVarRW(DUC->g_pTweakBar, "Basket Segments", TW_TYPE_INT32, &basketSegmnets, "min=1");
@@ -246,9 +247,9 @@ void RigidBodySystemSimulator::applyForces()
 	{
 		RigidBody& m1 = rigidBodies[sp.massPoint1];
 		RigidBody& m2 = rigidBodies[sp.massPoint2];
-		double totalForce = norm(m1.position - m2.position) - sp.initialLength;
-		Vec3 dir = m2.position - m1.position;
-		normalize(dir);
+		double lengthDiff = norm(m1.position - m2.position) - sp.initialLength;
+		double totalForce = stiffness * lengthDiff;
+		Vec3 dir = getNormalized(m2.position - m1.position);
 		applyForceOnBody(m1, m1.position, dir * totalForce);
 		applyForceOnBody(m2, m2.position, dir * totalForce);
 	}
