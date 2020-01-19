@@ -63,6 +63,10 @@ public:
 
 	void addBasket(Vec3 position, double scale, int segments);
 
+	void addNet(Vec3 position, double scale, int segments);
+
+	void addSpring(int mp, int mp2);
+
 	// UI Callbacks
 	static void TW_CALL removeBasketballsCallback(void* optionalData);
 	void removeBasketballs();

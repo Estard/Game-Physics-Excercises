@@ -118,6 +118,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 void RigidBodySystemSimulator::initScene()
 {
 	addBasket(Vec3(0, -1, 1), basketScale, basketSegmnets);
+	addNet(Vec3(0, -1, 1), basketScale, 5);
 
 	addRigidBody(Vec3(0, -5, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
 	//addRigidBody(Vec3(0.9, 3, 1.8), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", true);
@@ -410,7 +411,7 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 				+ Vec3(0., 0., 1 * scale) * cos(angle*i);
 			rb.scale = scale * Vec3(sin(angle / 2.) * 2., .1, .1);
 			rb.rotation = Quat(Vec3(1, 0, 0), M_PI * .25) * Quat(Vec3(0, 1, 0), 2 * M_PI * ((double)i / (double)segments));
-			addRigidBody(rb.position, Vec3(0.1, 0, 0), netMass, "segment " + std::to_string(i), true, true, rb.rotation);
+			addRigidBody(rb.position, rb.scale, netMass, "segment " + std::to_string(i), false, true, rb.rotation);
 		}
 	RigidBody wall{};
 	wall.position = position + scale * Vec3(0, 0, 1.1);
@@ -418,6 +419,38 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 	addRigidBody(wall.position, wall.scale, netMass, "wall", false , true);
 }
 
+void RigidBodySystemSimulator::addNet(Vec3 position, double scale, int segments) {
+	int offset = rigidBodies.size();
+	double angle = 2. * M_PI / (double)segments;
+	for (int j = 0; j < 5; j++) {
+		for (int i = 0; i < ((segments >= 4) ? segments : 4); i++) {
+			RigidBody rb{};
+			rb.position = position + Vec3(0., -angle * j * scale, 0.)
+				+ Vec3(1 * scale, 0., 0.) * sin(angle * i + (((j % 2) != 0) ? (angle / 2) : 0))
+				+ Vec3(0., 0., 1 * scale) * cos(angle * i + (((j % 2) != 0) ? (angle / 2) : 0));
+			rb.scale = scale * Vec3(.1, .1, .1);
+			addRigidBody(rb.position, Vec3(0.03, 0, 0), netMass, "net " + std::to_string(i), true, j == 0);
+			if (j != 0) {//all except top row add \  /
+				addSpring(offset + i + (j - 1) * segments, offset + i + j * segments);
+				addSpring(offset + ((j % 2) == 0) ? (i - 1 + segments) % segments : (i + 1) % segments + (j - 1) * segments, offset + i + j * segments);
+			}
+			if (i != 0) {//all except 1st of row add:  <-
+				addSpring(offset + i + (j * segments) - 1, offset + i + j * segments);
+			}
+			if (i == segments - 1) {//for the last in row, add ->
+				addSpring(offset + i + (j * segments) - (segments - 1), offset + i + j * segments);
+			}
+		}
+	}
+}
+
+void RigidBodySystemSimulator::addSpring(int mp, int mp2)
+{
+	Spring s = Spring{};
+	s.massPoint1 = mp;
+	s.massPoint2 = mp2;
+	s.initialLength = norm(rigidBodies[mp].position - rigidBodies[mp2].position);
+}
 // UI Callback Methods
 void TW_CALL RigidBodySystemSimulator::removeBasketballsCallback(void* optionalData) {
 
@@ -427,7 +460,8 @@ void TW_CALL RigidBodySystemSimulator::removeBasketballsCallback(void* optionalD
 
 void RigidBodySystemSimulator::removeBasketballs()
 {
-	std::remove(rigidBodies.begin(), rigidBodies.end(), isBall);	
+	auto it = std::remove_if(rigidBodies.begin(), rigidBodies.end(), isBall);
+	rigidBodies.erase(it, rigidBodies.end());
 }
 
 
