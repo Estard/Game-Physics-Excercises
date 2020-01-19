@@ -450,6 +450,7 @@ void RigidBodySystemSimulator::addSpring(int mp, int mp2)
 	s.massPoint1 = mp;
 	s.massPoint2 = mp2;
 	s.initialLength = norm(rigidBodies[mp].position - rigidBodies[mp2].position);
+	springs.push_back(s);
 }
 // UI Callback Methods
 void TW_CALL RigidBodySystemSimulator::removeBasketballsCallback(void* optionalData) {

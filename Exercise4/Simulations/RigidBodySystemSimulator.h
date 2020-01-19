@@ -29,7 +29,8 @@ struct RigidBody
 
 struct Spring
 {
-    int massPoint1,massPoint2, initialLength;
+	int massPoint1, massPoint2;
+	double initialLength;
 };
 
 
@@ -62,6 +63,8 @@ public:
 	CollisionInfo checkCollisionSphereCube(RigidBody &sphere, RigidBody &box);
 
 	void addBasket(Vec3 position, double scale, int segments);
+	void RigidBodySystemSimulator::addNet(Vec3 position, double scale, int segments);
+	void RigidBodySystemSimulator::addSpring(int mP1, int mP2);
 
 	void addNet(Vec3 position, double scale, int segments);
 
