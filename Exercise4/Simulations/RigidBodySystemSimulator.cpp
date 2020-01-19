@@ -295,7 +295,7 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 	}
 	if (a.name.compare("net") == 0 && b.name.compare("net") == 0)
 	{
-		return collision;
+	//	return collision;
 	}
 
 	if (a.isSphere || b.isSphere)
@@ -409,10 +409,10 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 	double impulse = relVelonNormal / denominator;
 
 	Vec3 impulseNormal = impulse * ci.normalWorld;
-	/*if(!a.isStatic)
+	if(!a.isStatic)
 		a.position += (ci.normalWorld * ci.depth) / (b.isStatic ? 1 : 2);
 	if(!b.isStatic)
-		b.position -= (ci.normalWorld * ci.depth) / (a.isStatic ? 1 : 2);*/
+		b.position -= (ci.normalWorld * ci.depth) / (a.isStatic ? 1 : 2);
 
 	a.linearVelocity += (a.isStatic ? Vec3(0.) : (impulseNormal / a.mass));
 	b.linearVelocity -= (b.isStatic ? Vec3(0.) : (impulseNormal / b.mass));
