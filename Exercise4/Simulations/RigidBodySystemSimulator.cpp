@@ -96,6 +96,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	this->DUC = DUC;
 	rigidBodies.clear();
 	springs.clear();
+	marked.clear();
 
 	TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_DOUBLE, &gravitation, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep0", NULL);
@@ -129,6 +130,7 @@ void RigidBodySystemSimulator::initScene()
 	addNet(Vec3(0, -1.6, 1.5), basketScale, netSegments);
 
 	addRigidBody(Vec3(0, -5, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
+	addRigidBody(Vec3(0, -1, .9), Vec3(basketScale - ballScale / 4, .1, basketScale - ballScale / 4), 1, "hitzone", false, true);
 	//addRigidBody(Vec3(0.9, 3, 1.8), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", true);
 	//addRigidBody(Vec3(0, -0.5, 0), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", false, true);
 }
@@ -137,6 +139,7 @@ void RigidBodySystemSimulator::reset()
 {
 	rigidBodies.clear();
 	springs.clear();
+	marked.clear();
 	anzahlBall = 0;
 	initScene();
 }
@@ -147,7 +150,7 @@ void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateConte
 		if (rb.isSphere) {
 			DUC->drawSphere(rb.position, Vec3(rb.scale.x));
 		}
-		else
+		else if (rb.name.compare("hitzone") != 0)
 		{
 			auto rot = rb.rotation.getRotMat();
 			Mat4 scale;
@@ -208,7 +211,23 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 		for (int j = i + 1; j < rigidBodies.size(); j++)
 		{
 			auto ci = getCollision(rigidBodies[i], rigidBodies[j]);
-			resolveCollision(rigidBodies[i], rigidBodies[j], ci);
+			if ((rigidBodies[i].name.compare("hitzone") == 0) && (rigidBodies[j].name.substr(0,4).compare("Ball")==0)) {
+				if (std::find(marked.begin(),marked.end(),j) == marked.end()) {
+					marked.push_back(j);
+					score++;
+					std::cout << score << "\n";
+				}
+			}
+			else if ((rigidBodies[j].name.compare("hitzone") == 0) && (rigidBodies[i].name.substr(0, 4).compare("Ball") == 0)) {
+				if (std::find(marked.begin(), marked.end(), i) == marked.end()) {
+					marked.push_back(i);
+					score++;
+					std::cout << score << "\n";
+				}
+			}
+			else if((rigidBodies[i].name.compare("hitzone") != 0)&& (rigidBodies[j].name.compare("hitzone") != 0)){
+				resolveCollision(rigidBodies[i], rigidBodies[j], ci);
+			}
 		}
 	}
 	applyForces();
@@ -485,6 +504,8 @@ void RigidBodySystemSimulator::removeBasketballs()
 {
 	auto it = std::remove_if(rigidBodies.begin(), rigidBodies.end(), isBall);
 	rigidBodies.erase(it, rigidBodies.end());
+	marked.clear();
+	anzahlBall = 0;
 }
 
 
