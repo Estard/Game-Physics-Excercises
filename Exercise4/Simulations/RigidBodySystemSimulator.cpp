@@ -229,8 +229,8 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 		DirectX::XMVECTOR spawnPos = camPos + 2.0 * viewDir;
 		
 		// XMVector elements cant be accessed, copy to float3
-		XMFLOAT3 f_spawnPos;    
-		XMStoreFloat3(&f_spawnPos, spawnPos);
+		DirectX::XMFLOAT3 f_spawnPos;    
+		DirectX::XMStoreFloat3(&f_spawnPos, spawnPos);
 
 		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball", true, false);
 		std::cout << "Spawned Ball at: " << f_spawnPos.x << "|" << f_spawnPos.y << "|" << f_spawnPos.z;
@@ -243,8 +243,8 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 
 		//rb.linearVelocity = viewDir * velocityMul;
 		viewDir = viewDir * velocityMul;
-		XMFLOAT3 v_force;
-		XMStoreFloat3(&v_force, viewDir);
+		DirectX::XMFLOAT3 v_force;
+		DirectX::XMStoreFloat3(&v_force, viewDir);
 		applyForceOnBody(rb, Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(v_force.x, v_force.y, v_force.z));
 		std::cout << " with force " << v_force.x << "|" << v_force.y << "|" << v_force.z;
 	}
