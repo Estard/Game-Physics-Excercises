@@ -185,13 +185,15 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 		rb.rotation = rb.rotation + (Quat(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z, 0) * rb.rotation) * .5 * timeStep;
 		rb.rotation = rb.rotation.unit();
 		rb.angularMomentum += timeStep * rb.torque -damping * norm(rb.angularVelocity);
-		
-		Mat4 Rot = rb.rotation.getRotMat();
-		Mat4 RotT = Rot.inverse();
-		Mat4 Im1 = Rot * rb.inverseInertia * RotT;
-		rb.inverseInertiaT = Im1;
+		if (!rb.isSphere)
+		{
+			Mat4 Rot = rb.rotation.getRotMat();
+			Mat4 RotT = Rot.inverse();
+			Mat4 Im1 = Rot * rb.inverseInertia * RotT;
+			rb.inverseInertiaT = Im1;
 
-		rb.angularVelocity = Im1 * rb.angularMomentum;
+			rb.angularVelocity = Im1 * rb.angularMomentum;
+		}
 
 		rb.position += timeStep * rb.linearVelocity;
 		rb.leapVelocity = rb.linearVelocity;
@@ -273,7 +275,7 @@ void RigidBodySystemSimulator::applyForces()
 void RigidBodySystemSimulator::applyForceOnBody(RigidBody &rb, Vec3 loc, Vec3 force)
 {
 	rb.force += force -damping* rb.linearVelocity;
-	rb.torque += cross(loc - rb.position, force);
+	//rb.torque += cross(loc - rb.position, force);
 }
 
 void RigidBodySystemSimulator::addRigidBody(Vec3 position, Vec3 size, double mass, std::string name, bool isSphere, bool isStatic, Quat rotation)
@@ -402,6 +404,7 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 	double inverseMasses = (a.isStatic ? 0 : (1.0 / a.mass)) + (b.isStatic ? 0 : (1.0 / b.mass));
 	
 	Mat4 invA, invB;
+
 	if (!a.isStatic)
 		invA = a.inverseInertiaT;
 	if (!b.isStatic)
