@@ -15,6 +15,8 @@
 #include "util/util.h"
 #include "util/FFmpeg.h"
 
+#include "windows.h"
+
 using namespace DirectX;
 using namespace GamePhysics;
 
@@ -196,13 +198,25 @@ void CALLBACK OnKeyboard( UINT nChar, bool bKeyDown, bool bAltDown, void* pUserC
 //--------------------------------------------------------------------------------------
 // Handle mouse button presses
 //--------------------------------------------------------------------------------------
+
+long mouseDownTimestamp = 0;
+bool mouseHeldDown = false;
+
 void CALLBACK OnMouse( bool bLeftButtonDown, bool bRightButtonDown, bool bMiddleButtonDown,
                        bool bSideButton1Down, bool bSideButton2Down, int nMouseWheelDelta,
                        int xPos, int yPos, void* pUserContext )
 {
-	if (bLeftButtonDown)
+	// Click begins
+	if (!mouseHeldDown && bLeftButtonDown)
 	{
-		g_pSimulator->onClick(xPos,yPos);
+		mouseDownTimestamp = GetTickCount();
+		mouseHeldDown = true;
+	}
+	// Click ends
+	else if (mouseHeldDown && !bLeftButtonDown) {
+		mouseHeldDown = false;
+		int clicktime = GetTickCount() - mouseDownTimestamp;
+		g_pSimulator->onClick(xPos, yPos, clicktime);
 	}
 	else
 	{

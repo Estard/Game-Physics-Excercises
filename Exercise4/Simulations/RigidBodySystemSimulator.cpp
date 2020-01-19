@@ -27,6 +27,32 @@ Mat4 quatToRot(Quat const& q)
 	return Result;
 }
 
+
+Quat inverse(Quat &q)
+{
+	//conjugated Quaternion
+	Quat conj(-q.x,-q.y,-q.z,q.w);
+	//dot product for renormalization
+	double dot = q.x*q.x+q.y*q.y+q.z*q.z+q.w*q.w;
+	conj = conj/dot;
+	return conj;
+}
+
+Vec3 rotate(Quat &q, Vec3 &v)
+{
+		Vec3 QuatVector(q.x, q.y, q.z);
+		Vec3 uv = cross(QuatVector, v);
+		Vec3 uuv= cross(QuatVector, uv);
+		return v + ((uv * q.w) + uuv) * 2.;
+}
+
+Vec3 sign(Vec3 &v)
+{
+	Vec3 sign(int(v.x>0.)-int(v.x<0.),int(v.y>0.)-int(v.y<0.),int(v.y>0.)-int(v.y<0.));
+	return sign;
+}
+
+
 Mat4 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, double mass)
 {
 	double factor = mass / 12.;
@@ -92,7 +118,7 @@ void RigidBodySystemSimulator::initScene()
 	addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
 
 	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.001, 200), netMass, "Floor", false, true);
-	addRigidBody(Vec3(0.9, 2, 2), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", false);
+	//addRigidBody(Vec3(0.9, 2, 2), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", false);
 	//addRigidBody(Vec3(0, -0.5, 0), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", false, true);
 }
 
@@ -171,7 +197,33 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 	}
 }
 
-void RigidBodySystemSimulator::onClick(int x, int y) {
+void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
+	std::cout << "Click took " << duration << "ms\n";
+	if (x > 217 || y > 338) // shitty filtering of clicks on the tweakbar
+	{
+		DirectX::XMVECTOR camPos = DUC->g_camera.GetEyePt();
+		DirectX::XMVECTOR viewPos = DUC->g_camera.GetLookAtPt();
+		DirectX::XMVECTOR viewDir = viewPos - camPos;
+		viewDir = DirectX::XMVector3Normalize(viewDir);
+
+		DirectX::XMVECTOR spawnPos = camPos + 2.0 * viewDir;
+		
+		// XMVector elements cant be accessed, copy to float4
+		XMFLOAT3 f_spawnPos;    
+		XMStoreFloat3(&f_spawnPos, spawnPos);
+
+
+
+		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", true, false);
+		std::cout << "Spawned Ball at: " << f_spawnPos.x << "|" << f_spawnPos.y << "|" << f_spawnPos.z << "\n";
+		
+		// Fish for reference to our rb since addRigidBody doesnt return a reference to the rb created
+		RigidBody& rb = rigidBodies[rigidBodies.size() - 1];
+
+		// applyForceOnBody(rb, rb.position, 20000);
+		rb.linearVelocity =  viewDir * duration / 1000;
+
+	}
 }
 
 void RigidBodySystemSimulator::onMouse(int x, int y) {
@@ -284,20 +336,24 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	collision.normalWorld = Vec3(0.0);
 	collision.depth = 0.0;
 	Vec3 sphereMiddleRtoBox = sphere.position - box.position;
+
 	Mat4 matBox = quatToRot(box.rotation).inverse();
-	sphereMiddleRtoBox = matBox * (sphereMiddleRtoBox);
+	//sphereMiddleRtoBox = matBox * (sphereMiddleRtoBox);
+	sphereMiddleRtoBox = rotate(inverse(box.rotation),sphereMiddleRtoBox);
 	Vec3 distVec = sphereMiddleRtoBox.getAbsolutes() - (box.scale/2);
 	distVec = distVec.maximize(Vec3(0.));
 	if (norm(distVec) < sphere.scale.x)
 	{
 		collision.depth = sphere.scale.x - norm(distVec)*.5;
 		collision.isValid = true;
-		distVec = quatToRot(box.rotation).transformVector(distVec * Vec3(sphereMiddleRtoBox.x < 0 ? -1 : 1, sphereMiddleRtoBox.y < 0 ? -1 : 1, sphereMiddleRtoBox.z < 0 ? -1 : 1));
+	//	distVec = quatToRot(box.rotation).transformVector(distVec * Vec3(sphereMiddleRtoBox.x < 0 ? -1 : 1, sphereMiddleRtoBox.y < 0 ? -1 : 1, sphereMiddleRtoBox.z < 0 ? -1 : 1));
+		distVec = rotate(cube.rotation,distVec*sign(sphereMiddleRtoBox));
 		collision.collisionPointWorld = sphere.position - distVec;
 		collision.normalWorld = normalize(distVec);
 	}
-	
 	return collision;
+    }
+
 }
 
 void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, CollisionInfo &ci)
