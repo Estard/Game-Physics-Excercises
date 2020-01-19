@@ -105,5 +105,6 @@ private:
 	double throwVelocityMax = 6000;
 	double throwVelocityWindUp = 5.0;
 
+	int anzahlBall = 0;
 	};
 #endif

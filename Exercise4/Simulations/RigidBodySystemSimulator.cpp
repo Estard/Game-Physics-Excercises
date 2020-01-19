@@ -1,8 +1,5 @@
 #include "RigidBodySystemSimulator.h"
 
-Vec3 lastPoint = Vec3();
-Vec3 lastNormal = Vec3();
-
 Mat4 quatToRot(Quat const& q)
 {
 	Mat4 Result;
@@ -140,8 +137,7 @@ void RigidBodySystemSimulator::reset()
 {
 	rigidBodies.clear();
 	springs.clear();
-	lastPoint = Vec3();
-	lastNormal = Vec3();
+	anzahlBall = 0;
 	initScene();
 }
 
@@ -167,9 +163,6 @@ void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateConte
 		DUC->drawLine(rigidBodies[s.massPoint1].position, Vec3(1, 0, 0), rigidBodies[s.massPoint2].position, Vec3(1, 0, 0));
 		DUC->endLine();
 	}
-	DUC->beginLine();
-	DUC->drawLine(lastPoint, Vec3(1, 0, 0), lastPoint + lastNormal, Vec3(0, 1, 0));
-	DUC->endLine();
 }
 
 void RigidBodySystemSimulator::notifyCaseChanged(int testCase)
@@ -236,8 +229,7 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 		XMFLOAT3 f_spawnPos;    
 		XMStoreFloat3(&f_spawnPos, spawnPos);
 
-		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball", true, false);
-		std::cout << "Spawned Ball at: " << f_spawnPos.x << "|" << f_spawnPos.y << "|" << f_spawnPos.z;
+		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball " + anzahlBall++, true, false);
 		
 		// Fish for reference to our rb since addRigidBody doesnt return a reference to the rb created
 		RigidBody& rb = rigidBodies[rigidBodies.size() - 1];
@@ -250,7 +242,6 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 		XMFLOAT3 v_force;
 		XMStoreFloat3(&v_force, viewDir);
 		applyForceOnBody(rb, Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(v_force.x, v_force.y, v_force.z));
-		std::cout << " with force " << v_force.x << "|" << v_force.y << "|" << v_force.z;
 	}
 }
 
@@ -348,13 +339,6 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 		translateB.initTranslation(b.position.x, b.position.y, b.position.z);
 		collision = checkCollisionSAT(rotA*scaleA*translateA, rotB*scaleB*translateB);
 		collision.normalWorld *= -1;
-	}
-	if (collision.isValid)
-		std::cout << "Collision between " << a.name << " and " << b.name << " with normal " << collision.normalWorld << std::endl;
-	if (collision.isValid && lastPoint.x == 0)
-	{
-		lastPoint = collision.collisionPointWorld;
-		lastNormal = collision.normalWorld;
 	}
 	return collision;
 }
