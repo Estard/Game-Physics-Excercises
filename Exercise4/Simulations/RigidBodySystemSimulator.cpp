@@ -195,7 +195,6 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 
 void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 {
-	applyForces();
 	for (auto& rb : rigidBodies)
 	{
 		if(!rb.isStatic)
@@ -210,6 +209,7 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 			resolveCollision(rigidBodies[i], rigidBodies[j], ci);
 		}
 	}
+	applyForces();
 }
 
 void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
@@ -292,6 +292,8 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 	{
 		return collision;
 	}
+	if (a.name.compare("net") == 0 && b.name.compare("net") == 0)
+		return collision;
 
 	if (a.isSphere || b.isSphere)
 	{
@@ -404,10 +406,10 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 	double impulse = relVelonNormal / denominator;
 
 	Vec3 impulseNormal = impulse * ci.normalWorld;
-	if(!a.isStatic)
+	/*if(!a.isStatic)
 		a.position += (ci.normalWorld * ci.depth) / (b.isStatic ? 1 : 2);
 	if(!b.isStatic)
-		b.position -= (ci.normalWorld * ci.depth) / (a.isStatic ? 1 : 2);
+		b.position -= (ci.normalWorld * ci.depth) / (a.isStatic ? 1 : 2);*/
 
 	a.linearVelocity += (a.isStatic ? Vec3(0.) : (impulseNormal / a.mass));
 	b.linearVelocity -= (b.isStatic ? Vec3(0.) : (impulseNormal / b.mass));
@@ -428,7 +430,7 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 			addRigidBody(rb.position, rb.scale, netMass, "segment " + std::to_string(i), false, true, rb.rotation);
 		}
 	RigidBody wall{};
-	wall.position = position + scale * Vec3(0, 0, 1.1);
+	wall.position = position + scale * Vec3(0, 0.5, 1.3);
 	wall.scale = scale * Vec3(3., 3., .1);
 	addRigidBody(wall.position, wall.scale, netMass, "wall", false , true);
 }
@@ -442,8 +444,8 @@ void RigidBodySystemSimulator::addNet(Vec3 position, double scale, int segments)
 			rb.position = position + Vec3(0., -j * scale / (double)segments, 0.)
 				+ Vec3(1 * scale, 0., 0.) * sin(angle * i + (((j % 2) != 0) ? (angle / 2) : 0))
 				+ Vec3(0., 0., 1 * scale) * cos(angle * i + (((j % 2) != 0) ? (angle / 2) : 0));
-			rb.scale = scale * Vec3(.1, .1, .1);
-			addRigidBody(rb.position, Vec3(0.03, 0, 0), netMass, "net " + std::to_string(i), true, j == 0);
+			rb.scale = scale * Vec3(.2, .1, .1);
+			addRigidBody(rb.position, rb.scale, netMass, "net", true, j == 0);
 			if (j != 0) {//all except top row add \  /
 				addSpring(offset + i + (j - 1) * segments, offset + i + j * segments);
 				addSpring(offset + (((j % 2) == 0) ? (i - 1 + segments) % segments : (i + 1) % segments) + (j - 1) * segments, offset + i + j * segments);
