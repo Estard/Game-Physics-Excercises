@@ -102,9 +102,6 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	TwAddSeparator(DUC->g_pTweakBar, "sep1", NULL);
 
 	TwAddVarRW(DUC->g_pTweakBar, "Net Mass", TW_TYPE_DOUBLE, &netMass, "min=0.0001");
-	TwAddVarRW(DUC->g_pTweakBar, "Net Damping", TW_TYPE_DOUBLE, &netDamping, "min=0.0");
-	TwAddVarRW(DUC->g_pTweakBar, "Net Bounciness", TW_TYPE_DOUBLE, &netBounciness, "min=0.0");
-	TwAddVarRW(DUC->g_pTweakBar, "Net Collision", TW_TYPE_BOOLCPP, &netCollision, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep2", NULL);
 
 	TwAddVarRW(DUC->g_pTweakBar, "Basket Segments", TW_TYPE_INT32, &basketSegmnets, "min=1");
@@ -115,10 +112,10 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	//addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
+	addBasket(Vec3(0, -1, 1), basketScale, basketSegmnets);
 
-	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
-	addRigidBody(Vec3(0.5, 1, 0.5), Vec3(0.5, 0.5, 0.5), ballMass, "Ball", false);
+	addRigidBody(Vec3(0, -5, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
+	//addRigidBody(Vec3(0.9, 3, 1.8), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", true);
 	//addRigidBody(Vec3(0, -0.5, 0), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", false, true);
 }
 
@@ -163,7 +160,7 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 		rb.linearVelocity += timeStep * rb.force / rb.mass;
 		rb.rotation = rb.rotation + (Quat(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z, 0) * rb.rotation) * .5 * timeStep;
 		rb.rotation = rb.rotation.unit();
-		rb.angularMomentum += timeStep * rb.torque - netDamping * norm(rb.angularVelocity);
+		rb.angularMomentum += timeStep * rb.torque - (1.-elasticity) * norm(rb.angularVelocity);
 		
 		Mat4 Rot = rb.rotation.getRotMat();
 		Mat4 RotT = Rot.inverse();
@@ -221,7 +218,7 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 		RigidBody& rb = rigidBodies[rigidBodies.size() - 1];
 
 		// applyForceOnBody(rb, rb.position, 20000);
-		rb.linearVelocity =  viewDir * duration / 1000;
+		rb.linearVelocity =  viewDir * duration / 500;
 
 	}
 }
@@ -236,8 +233,7 @@ void RigidBodySystemSimulator::applyForces()
 	{
 		RigidBody& m1 = rigidBodies[sp.massPoint1];
 		RigidBody& m2 = rigidBodies[sp.massPoint2];
-		double lengthDif = sqrt(m1.position.squaredDistanceTo(m2.position)) - sp.initialLength;
-		double totalForce = netBounciness * lengthDif;
+		double totalForce = sqrt(m1.position.squaredDistanceTo(m2.position)) - sp.initialLength;
 		Vec3 dir = m2.position - m1.position;
 		normalize(dir);
 		applyForceOnBody(m1, m1.position, dir * totalForce);
@@ -247,7 +243,7 @@ void RigidBodySystemSimulator::applyForces()
 
 void RigidBodySystemSimulator::applyForceOnBody(RigidBody &rb, Vec3 loc, Vec3 force)
 {
-	rb.force += force - netDamping * rb.linearVelocity;
+	rb.force += force - (1. - elasticity) *rb.linearVelocity;
 	rb.torque += cross(loc - rb.position, force);
 }
 
@@ -350,9 +346,7 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 		distVec = rotate(box.rotation,distVec*sign(sphereMiddleRtoBox));
 		collision.collisionPointWorld = sphere.position - distVec;
 		collision.normalWorld = getNormalized(distVec);
-		std::cout << collision.normalWorld << std::endl;
 	}
-	std::cout << collision.normalWorld << std::endl;
 	return collision;
 }
 

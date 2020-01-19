@@ -84,16 +84,12 @@ private:
 	Point2D m_trackmouse;
 	Point2D m_oldtrackmouse;
 	
-	double netDamping = 0.1;
 	double netMass = 1.0;
-	double friction = 0.1;
-	bool netCollision = true;
-	double netBounciness = 0.0;
 	double gravitation = 1.0;
 	double ballMass = 10;
 	double ballScale = 1;
 	double timeStep = 0.01;
-	double elasticity = 1.0;
+	double elasticity = 0.9;
 
 	double basketScale = 1.0;
 	int basketSegmnets = 50;
