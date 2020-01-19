@@ -27,6 +27,32 @@ Mat4 quatToRot(Quat const& q)
 	return Result;
 }
 
+
+Quat inverse(Quat &q)
+{
+	//conjugated Quaternion
+	Quat conj(-q.x,-q.y,-q.z,q.w);
+	//dot product for renormalization
+	double dot = q.x*q.x+q.y*q.y+q.z*q.z+q.w*q.w;
+	conj = conj/dot;
+	return conj;
+}
+
+Vec3 rotate(Quat &q, Vec3 &v)
+{
+		Vec3 QuatVector(q.x, q.y, q.z);
+		Vec3 uv = cross(QuatVector, v);
+		Vec3 uuv= cross(QuatVector, uv);
+		return v + ((uv * q.w) + uuv) * 2.;
+}
+
+Vec3 sign(Vec3 &v)
+{
+	Vec3 sign(int(v.x>0.)-int(v.x<0.),int(v.y>0.)-int(v.y<0.),int(v.y>0.)-int(v.y<0.));
+	return sign;
+}
+
+
 Mat4 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, double mass)
 {
 	double factor = mass / 12.;
@@ -294,20 +320,24 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	collision.normalWorld = Vec3(0.0);
 	collision.depth = 0.0;
 	Vec3 sphereMiddleRtoBox = sphere.position - box.position;
+
 	Mat4 matBox = quatToRot(box.rotation).inverse();
-	sphereMiddleRtoBox = matBox * (sphereMiddleRtoBox);
+	//sphereMiddleRtoBox = matBox * (sphereMiddleRtoBox);
+	sphereMiddleRtoBox = rotate(inverse(box.rotation),sphereMiddleRtoBox);
 	Vec3 distVec = sphereMiddleRtoBox.getAbsolutes() - (box.scale/2);
 	distVec = distVec.maximize(Vec3(0.));
 	if (norm(distVec) < sphere.scale.x)
 	{
 		collision.depth = sphere.scale.x - norm(distVec)*.5;
 		collision.isValid = true;
-		distVec = quatToRot(box.rotation).transformVector(distVec * Vec3(sphereMiddleRtoBox.x < 0 ? -1 : 1, sphereMiddleRtoBox.y < 0 ? -1 : 1, sphereMiddleRtoBox.z < 0 ? -1 : 1));
+	//	distVec = quatToRot(box.rotation).transformVector(distVec * Vec3(sphereMiddleRtoBox.x < 0 ? -1 : 1, sphereMiddleRtoBox.y < 0 ? -1 : 1, sphereMiddleRtoBox.z < 0 ? -1 : 1));
+		distVec = rotate(cube.rotation,distVec*sign(sphereMiddleRtoBox));
 		collision.collisionPointWorld = sphere.position - distVec;
 		collision.normalWorld = normalize(distVec);
 	}
-	
 	return collision;
+    }
+
 }
 
 void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, CollisionInfo &ci)
