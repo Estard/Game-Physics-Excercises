@@ -127,7 +127,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	addBasket(Vec3(0, -1, 1), basketScale, basketSegmnets);
+	//addBasket(Vec3(0, -1, 1), basketScale, basketSegmnets);
 	addNet(Vec3(0, -1, 1), basketScale, netSegments);
 
 	addRigidBody(Vec3(0, -5, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
@@ -138,6 +138,7 @@ void RigidBodySystemSimulator::initScene()
 void RigidBodySystemSimulator::reset()
 {
 	rigidBodies.clear();
+	springs.clear();
 	lastPoint = Vec3();
 	lastNormal = Vec3();
 	initScene();
