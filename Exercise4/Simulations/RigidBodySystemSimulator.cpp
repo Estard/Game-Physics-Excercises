@@ -149,6 +149,12 @@ void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateConte
 			DUC->drawRigidBody(scale * rot * translate);
 		}
 	}
+	for (auto& s : springs)
+	{
+		DUC->beginLine();
+		DUC->drawLine(rigidBodies[s.massPoint1].position, Vec3(1, 0, 0), rigidBodies[s.massPoint2].position, Vec3(1, 0, 0));
+		DUC->endLine();
+	}
 	DUC->beginLine();
 	DUC->drawLine(lastPoint, Vec3(1, 0, 0), lastPoint + lastNormal, Vec3(0, 1, 0));
 	DUC->endLine();
@@ -240,7 +246,7 @@ void RigidBodySystemSimulator::applyForces()
 	{
 		RigidBody& m1 = rigidBodies[sp.massPoint1];
 		RigidBody& m2 = rigidBodies[sp.massPoint2];
-		double totalForce = sqrt(m1.position.squaredDistanceTo(m2.position)) - sp.initialLength;
+		double totalForce = norm(m1.position - m2.position) - sp.initialLength;
 		Vec3 dir = m2.position - m1.position;
 		normalize(dir);
 		applyForceOnBody(m1, m1.position, dir * totalForce);
