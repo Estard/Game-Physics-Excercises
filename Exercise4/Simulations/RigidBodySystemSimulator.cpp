@@ -110,6 +110,8 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 	TwAddVarRW(DUC->g_pTweakBar, "Net Mass", TW_TYPE_DOUBLE, &netMass, "min=0.0001");
 	TwAddVarRW(DUC->g_pTweakBar, "Net Stiffness", TW_TYPE_DOUBLE, &stiffness, "min=3");
+	TwAddVarRW(DUC->g_pTweakBar, "Damping", TW_TYPE_DOUBLE, &damping, "min=0.0 max=1.0");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Segments", TW_TYPE_INT32, &netSegments, "min=5 max=100");
 	TwAddSeparator(DUC->g_pTweakBar, "sep2", NULL);
 
 	TwAddVarRW(DUC->g_pTweakBar, "Basket Segments", TW_TYPE_INT32, &basketSegmnets, "min=1");
@@ -126,7 +128,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 void RigidBodySystemSimulator::initScene()
 {
 	addBasket(Vec3(0, -1, 1), basketScale, basketSegmnets);
-	addNet(Vec3(0, -1, 1), basketScale, 5);
+	addNet(Vec3(0, -1, 1), basketScale, netSegments);
 
 	addRigidBody(Vec3(0, -5, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
 	//addRigidBody(Vec3(0.9, 3, 1.8), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", true);
@@ -180,7 +182,7 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 		rb.linearVelocity = timeStep * rb.force / rb.mass + rb.leapVelocity;
 		rb.rotation = rb.rotation + (Quat(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z, 0) * rb.rotation) * .5 * timeStep;
 		rb.rotation = rb.rotation.unit();
-		rb.angularMomentum += timeStep * rb.torque -(1. - elasticity) * norm(rb.angularVelocity);
+		rb.angularMomentum += timeStep * rb.torque -damping * norm(rb.angularVelocity);
 		
 		Mat4 Rot = rb.rotation.getRotMat();
 		Mat4 RotT = Rot.inverse();
@@ -266,7 +268,7 @@ void RigidBodySystemSimulator::applyForces()
 
 void RigidBodySystemSimulator::applyForceOnBody(RigidBody &rb, Vec3 loc, Vec3 force)
 {
-	rb.force += force - (1. -elasticity) * rb.linearVelocity;
+	rb.force += force -damping* rb.linearVelocity;
 	rb.torque += cross(loc - rb.position, force);
 }
 
@@ -295,9 +297,9 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 	{
 		return collision;
 	}
-	if (a.name.compare("net") == 0 && b.name.compare("net") == 0)
+	if (a.name.compare("net") == 0 && b.name.compare("net") == 0 )
 	{
-	//	return collision;
+		return collision;
 	}
 
 	if (a.isSphere || b.isSphere)
