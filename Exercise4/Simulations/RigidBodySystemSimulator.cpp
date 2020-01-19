@@ -94,6 +94,8 @@ const char* RigidBodySystemSimulator::getTestCasesStr()
 
 void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 {
+	TwDefine(" TweakBar size='250 500' "); // resize bar
+
 	this->DUC = DUC;
 	rigidBodies.clear();
 
@@ -215,7 +217,7 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 
 void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 	// Logic for throwing balls
-	if (x > 217 || y > 338) // shitty filtering of clicks on the tweakbar
+	if (x > 250 || y > 500) // shitty filtering of clicks on the tweakbar
 	{
 		DirectX::XMVECTOR camPos = DUC->g_camera.GetEyePt();
 		DirectX::XMVECTOR viewPos = DUC->g_camera.GetLookAtPt();
