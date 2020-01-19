@@ -112,6 +112,11 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	TwAddVarRW(DUC->g_pTweakBar, "Basket Segments", TW_TYPE_INT32, &basketSegmnets, "min=1");
 	TwAddVarRW(DUC->g_pTweakBar, "Basket Scale", TW_TYPE_DOUBLE, &basketScale, "min=0.001");
 	TwAddSeparator(DUC->g_pTweakBar, "sep3", NULL);
+
+	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Min", TW_TYPE_DOUBLE, &throwVelocityMin, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Max", TW_TYPE_DOUBLE, &throwVelocityMax, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Windup", TW_TYPE_DOUBLE, &throwVelocityWindUp, "");
+	TwAddSeparator(DUC->g_pTweakBar, "sep4", NULL);
 	initScene();
 	}
 
@@ -207,6 +212,7 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 }
 
 void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
+	// Logic for throwing balls
 	if (x > 217 || y > 338) // shitty filtering of clicks on the tweakbar
 	{
 		DirectX::XMVECTOR camPos = DUC->g_camera.GetEyePt();
@@ -228,8 +234,8 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 		// Fish for reference to our rb since addRigidBody doesnt return a reference to the rb created
 		RigidBody& rb = rigidBodies[rigidBodies.size() - 1];
 
-		float velocityMul = 1.0f + static_cast<float>(duration) / static_cast<float>(1000 * 0.25);
-		velocityMul = min(6.0f, velocityMul);
+		double velocityMul = throwVelocityMin + static_cast<double>(duration) / static_cast<double>(1000.0f * 1.0f / throwVelocityWindUp);
+		velocityMul = min(throwVelocityMax, velocityMul);
 		std::cout << " with velocity " << velocityMul << "\n";
 		rb.linearVelocity = viewDir * velocityMul;
 
