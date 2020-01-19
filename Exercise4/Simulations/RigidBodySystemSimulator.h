@@ -13,6 +13,7 @@ struct RigidBody
 	Quat rotation = Quat(Vec3(1,0,0),0);
 	Vec3 scale = Vec3();
 	Vec3 linearVelocity = Vec3();
+	Vec3 leapVelocity = Vec3();
 	Vec3 angularVelocity = Vec3();
 	Vec3 angularMomentum = Vec3();
 	Vec3 force = Vec3();

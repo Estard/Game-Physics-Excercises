@@ -175,7 +175,7 @@ void RigidBodySystemSimulator::externalForcesCalculations(float timeElapsed) {}
 
 void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 {
-		rb.linearVelocity += timeStep * rb.force / rb.mass;
+		rb.linearVelocity = timeStep * rb.force / rb.mass + rb.leapVelocity;
 		rb.rotation = rb.rotation + (Quat(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z, 0) * rb.rotation) * .5 * timeStep;
 		rb.rotation = rb.rotation.unit();
 		rb.angularMomentum += timeStep * rb.torque -(1. - elasticity) * norm(rb.angularVelocity);
@@ -188,6 +188,7 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 		rb.angularVelocity = Im1 * rb.angularMomentum;
 
 		rb.position += timeStep * rb.linearVelocity;
+		rb.leapVelocity = rb.linearVelocity;
 
 		rb.force = Vec3(0., -gravitation * rb.mass, 0);
 		rb.torque = Vec3(0.);
@@ -293,7 +294,9 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 		return collision;
 	}
 	if (a.name.compare("net") == 0 && b.name.compare("net") == 0)
+	{
 		return collision;
+	}
 
 	if (a.isSphere || b.isSphere)
 	{
@@ -430,7 +433,7 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 			addRigidBody(rb.position, rb.scale, netMass, "segment " + std::to_string(i), false, true, rb.rotation);
 		}
 	RigidBody wall{};
-	wall.position = position + scale * Vec3(0, 0.5, 1.3);
+	wall.position = position + scale * Vec3(0, 1.5, 1.1);
 	wall.scale = scale * Vec3(3., 3., .1);
 	addRigidBody(wall.position, wall.scale, netMass, "wall", false , true);
 }
@@ -444,7 +447,7 @@ void RigidBodySystemSimulator::addNet(Vec3 position, double scale, int segments)
 			rb.position = position + Vec3(0., -j * scale / (double)segments, 0.)
 				+ Vec3(1 * scale, 0., 0.) * sin(angle * i + (((j % 2) != 0) ? (angle / 2) : 0))
 				+ Vec3(0., 0., 1 * scale) * cos(angle * i + (((j % 2) != 0) ? (angle / 2) : 0));
-			rb.scale = scale * Vec3(.2, .1, .1);
+			rb.scale = scale * Vec3(.15, .1, .1);
 			addRigidBody(rb.position, rb.scale, netMass, "net", true, j == 0);
 			if (j != 0) {//all except top row add \  /
 				addSpring(offset + i + (j - 1) * segments, offset + i + j * segments);
