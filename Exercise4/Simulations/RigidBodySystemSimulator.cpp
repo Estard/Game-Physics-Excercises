@@ -125,8 +125,8 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	//addBasket(Vec3(0, -1, 1), basketScale, basketSegmnets);
-	addNet(Vec3(0, -1, 1), basketScale, netSegments);
+	addBasket(Vec3(0, -1.5, 1.5), basketScale, basketSegmnets);
+	addNet(Vec3(0, -1.6, 1.5), basketScale, netSegments);
 
 	addRigidBody(Vec3(0, -5, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
 	//addRigidBody(Vec3(0.9, 3, 1.8), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", true);
@@ -218,18 +218,25 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 	// Logic for throwing balls
 	if (x > 250 || y > 500) // shitty filtering of clicks on the tweakbar
 	{
-		DirectX::XMVECTOR camPos = DUC->g_camera.GetEyePt();
-		DirectX::XMVECTOR viewPos = DUC->g_camera.GetLookAtPt();
-		DirectX::XMVECTOR viewDir = viewPos - camPos;
+		XMVECTOR camPos = DUC->g_camera.GetEyePt();
+		XMVECTOR viewPos = DUC->g_camera.GetLookAtPt();
+		XMVECTOR viewDir = viewPos - camPos;
 		viewDir = DirectX::XMVector3Normalize(viewDir);
+		double rx = (double)x / -(DUC->g_camera.width * 2);
+		double ry = (double)y / -(DUC->g_camera.height * 2);
+		rx -= 1;
+		ry -= 1;
 
-		DirectX::XMVECTOR spawnPos = camPos + 2.0 * viewDir;
-		
+		std::cout << rx << " , " << ry << std::endl;
+
+		XMVECTOR spawnPos = camPos + 2.0 * viewDir;
+		XMVECTOR spawnOffset = Vec3(rx, ry, 0).toDirectXVector();
+		//spawnPos += Vec3(rx, ry, z).toDirectXVector();
 		// XMVector elements cant be accessed, copy to float3
 		XMFLOAT3 f_spawnPos;    
 		XMStoreFloat3(&f_spawnPos, spawnPos);
 
-		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball " + anzahlBall++, true, false);
+		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.5, 0.5)*ballScale, ballMass, "Ball " + anzahlBall++, true, false);
 		
 		// Fish for reference to our rb since addRigidBody doesnt return a reference to the rb created
 		RigidBody& rb = rigidBodies[rigidBodies.size() - 1];

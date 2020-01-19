@@ -324,6 +324,8 @@ public:
     void SetAttachCameraToModel( _In_ bool bEnable = false ) { m_bAttachCameraToModel = bEnable; }
     void SetWindow( _In_ int nWidth, _In_ int nHeight, _In_ float fArcballRadius=0.9f )
     {
+        width = nWidth;
+        height = nHeight;
         m_WorldArcBall.SetWindow( nWidth, nHeight, fArcballRadius );
         m_ViewArcBall.SetWindow( nWidth, nHeight, fArcballRadius );
     }
@@ -353,6 +355,8 @@ public:
         m_bDragSinceLastUpdate = true;
     }
 
+public:
+    int width, height;
 protected:
     CD3DArcBall m_WorldArcBall;
     CD3DArcBall m_ViewArcBall;
