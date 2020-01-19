@@ -172,7 +172,7 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 		rb.linearVelocity += timeStep * rb.force / rb.mass;
 		rb.rotation = rb.rotation + (Quat(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z, 0) * rb.rotation) * .5 * timeStep;
 		rb.rotation = rb.rotation.unit();
-		rb.angularMomentum += timeStep * rb.torque - (1.-elasticity) * norm(rb.angularVelocity);
+		rb.angularMomentum += timeStep * rb.torque -(1. - elasticity) * norm(rb.angularVelocity);
 		
 		Mat4 Rot = rb.rotation.getRotMat();
 		Mat4 RotT = Rot.inverse();
@@ -256,7 +256,7 @@ void RigidBodySystemSimulator::applyForces()
 
 void RigidBodySystemSimulator::applyForceOnBody(RigidBody &rb, Vec3 loc, Vec3 force)
 {
-	rb.force += force - (1. - elasticity) *rb.linearVelocity;
+	rb.force += force;
 	rb.torque += cross(loc - rb.position, force);
 }
 
