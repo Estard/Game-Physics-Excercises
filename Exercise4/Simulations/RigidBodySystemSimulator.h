@@ -63,11 +63,7 @@ public:
 	CollisionInfo checkCollisionSphereCube(RigidBody &sphere, RigidBody &box);
 
 	void addBasket(Vec3 position, double scale, int segments);
-	void RigidBodySystemSimulator::addNet(Vec3 position, double scale, int segments);
-	void RigidBodySystemSimulator::addSpring(int mP1, int mP2);
-
 	void addNet(Vec3 position, double scale, int segments);
-
 	void addSpring(int mp, int mp2);
 
 	// UI Callbacks
