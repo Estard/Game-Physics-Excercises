@@ -90,7 +90,7 @@ private:
 	Point2D m_oldtrackmouse;
 	
 	double netMass = 1.0;
-	double netSegments = 5.;
+	int netSegments = 5;
 	double gravitation = 1.0;
 	double ballMass = 10;
 	double ballScale = 1;

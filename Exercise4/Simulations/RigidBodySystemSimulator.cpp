@@ -109,7 +109,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	TwAddSeparator(DUC->g_pTweakBar, "sep1", NULL);
 
 	TwAddVarRW(DUC->g_pTweakBar, "Net Mass", TW_TYPE_DOUBLE, &netMass, "min=0.0001");
-	TwAddVarRW(DUC->g_pTweakBar, "Net Stiffness", TW_TYPE_DOUBLE, &stiffness, "min=3");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Stiffness", TW_TYPE_DOUBLE, &stiffness, "");
 	TwAddVarRW(DUC->g_pTweakBar, "Damping", TW_TYPE_DOUBLE, &damping, "min=0.0 max=1.0");
 	TwAddVarRW(DUC->g_pTweakBar, "Net Segments", TW_TYPE_INT32, &netSegments, "min=5 max=100");
 	TwAddSeparator(DUC->g_pTweakBar, "sep2", NULL);
@@ -415,10 +415,11 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 	double impulse = relVelonNormal / denominator;
 
 	Vec3 impulseNormal = impulse * ci.normalWorld;
+	
 	if(!a.isStatic)
-		a.position += (ci.normalWorld * ci.depth) / (b.isStatic ? 1 : 2);
+		a.position += (ci.normalWorld * ci.depth)  * (b.isStatic ? 2 : 1);
 	if(!b.isStatic)
-		b.position -= (ci.normalWorld * ci.depth) / (a.isStatic ? 1 : 2);
+		b.position -= (ci.normalWorld * ci.depth) * (a.isStatic ? 2 : 1);
 
 	a.leapVelocity += (a.isStatic ? Vec3(0.) : (impulseNormal / a.mass));
 	b.leapVelocity -= (b.isStatic ? Vec3(0.) : (impulseNormal / b.mass));
@@ -439,8 +440,8 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 			addRigidBody(rb.position, rb.scale, netMass, "segment " + std::to_string(i), false, true, rb.rotation);
 		}
 	RigidBody wall{};
-	wall.position = position + scale * Vec3(0, 1.5, 1.1);
-	wall.scale = scale * Vec3(3., 3., .1);
+	wall.position = position + scale * Vec3(0, 1.5, 1.3);
+	wall.scale = scale * Vec3(3., 3., 0.5);
 	addRigidBody(wall.position, wall.scale, netMass, "wall", false , true);
 }
 
@@ -450,10 +451,10 @@ void RigidBodySystemSimulator::addNet(Vec3 position, double scale, int segments)
 	for (int j = 0; j < segments; j++) {
 		for (int i = 0; i < ((segments >= 4) ? segments : 4); i++) {
 			RigidBody rb{};
-			rb.position = position + Vec3(0., -j * scale / (double)segments, 0.)
+			rb.position = position + Vec3(0., -j * 2 * scale / (double)segments, 0.)
 				+ Vec3(1 * scale, 0., 0.) * sin(angle * i + (((j % 2) != 0) ? (angle / 2) : 0))
 				+ Vec3(0., 0., 1 * scale) * cos(angle * i + (((j % 2) != 0) ? (angle / 2) : 0));
-			rb.scale = scale * Vec3(.15, .1, .1);
+			rb.scale = scale * Vec3(.12, .1, .1);
 			addRigidBody(rb.position, rb.scale, netMass, "net", true, j == 0);
 			if (j != 0) {//all except top row add \  /
 				addSpring(offset + i + (j - 1) * segments, offset + i + j * segments);
