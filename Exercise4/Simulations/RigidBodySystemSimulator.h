@@ -29,7 +29,7 @@ struct RigidBody
 
 struct Spring
 {
-    int massPoint1,massPoint2;
+    int massPoint1,massPoint2, initialLength;
 };
 
 
@@ -49,6 +49,8 @@ public:
 	void simulateTimestep(float timeStep);
 	void onClick(int x, int y);
 	void onMouse(int x, int y);
+
+	void applyForces();
 
 	// ExtraFunctions
 	void applyForceOnBody(RigidBody& rb, Vec3 loc, Vec3 force);

@@ -137,7 +137,7 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 		rb.linearVelocity += timeStep * rb.force / rb.mass;
 		rb.rotation = rb.rotation + (Quat(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z, 0) * rb.rotation) * .5 * timeStep;
 		rb.rotation = rb.rotation.unit();
-		rb.angularMomentum += timeStep * rb.torque;
+		rb.angularMomentum += timeStep * rb.torque - netDamping * norm(rb.angularVelocity);
 		
 		Mat4 Rot = quatToRot(rb.rotation);
 		Mat4 RotT = Rot.inverse();
@@ -154,6 +154,7 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 
 void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 {
+	applyForces();
 	for (auto& rb : rigidBodies)
 	{
 		if(!rb.isStatic)
@@ -177,9 +178,24 @@ void RigidBodySystemSimulator::onMouse(int x, int y) {
 }
 
 // ExtraFunctions
+void RigidBodySystemSimulator::applyForces()
+{
+	for (auto& sp : springs)
+	{
+		RigidBody& m1 = rigidBodies[sp.massPoint1];
+		RigidBody& m2 = rigidBodies[sp.massPoint2];
+		double lengthDif = sqrt(m1.position.squaredDistanceTo(m2.position)) - sp.initialLength;
+		double totalForce = netBounciness * lengthDif;
+		Vec3 dir = m2.position - m1.position;
+		normalize(dir);
+		applyForceOnBody(m1, m1.position, dir * totalForce);
+		applyForceOnBody(m2, m2.position, dir * totalForce);
+	}
+}
+
 void RigidBodySystemSimulator::applyForceOnBody(RigidBody &rb, Vec3 loc, Vec3 force)
 {
-	rb.force += force;
+	rb.force += force - netDamping * rb.linearVelocity;
 	rb.torque += cross(loc - rb.position, force);
 }
 
