@@ -34,7 +34,7 @@ Quat inverse(Quat &q)
 	Quat conj(-q.x,-q.y,-q.z,q.w);
 	//dot product for renormalization
 	double dot = q.x*q.x+q.y*q.y+q.z*q.z+q.w*q.w;
-	conj = conj/dot;
+	conj = conj * (1/dot);
 	return conj;
 }
 
@@ -115,10 +115,10 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
+	//addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
 
-	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.001, 200), netMass, "Floor", false, true);
-	//addRigidBody(Vec3(0.9, 2, 2), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", false);
+	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
+	addRigidBody(Vec3(0.5, 1, 0.5), Vec3(0.5, 0.5, 0.5), ballMass, "Ball", false);
 	//addRigidBody(Vec3(0, -0.5, 0), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", false, true);
 }
 
@@ -165,7 +165,7 @@ void  RigidBodySystemSimulator::integrate(RigidBody &rb)
 		rb.rotation = rb.rotation.unit();
 		rb.angularMomentum += timeStep * rb.torque - netDamping * norm(rb.angularVelocity);
 		
-		Mat4 Rot = quatToRot(rb.rotation);
+		Mat4 Rot = rb.rotation.getRotMat();
 		Mat4 RotT = Rot.inverse();
 		Mat4 Im1 = Rot * rb.inverseInertia * RotT;
 		rb.inverseInertiaT = Im1;
@@ -282,11 +282,11 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 		if (a.isSphere && b.isSphere)
 		{
 			double distance = norm(b.position - a.position);
-			collision.isValid = distance < (a.scale.x + b.scale.x);
+			collision.isValid = distance <= (a.scale.x + b.scale.x);
 			collision.depth = ((a.scale.x + b.scale.x) - distance) / 2;
 			if (collision.isValid)
 			{
-				collision.collisionPointWorld = a.position + normalize(b.position - a.position) * (a.scale.x - collision.depth);
+				collision.collisionPointWorld = a.position + getNormalized(b.position - a.position) * (a.scale.x - collision.depth);
 				collision.normalWorld = getNormalized(a.position - b.position);
 			}
 		}
@@ -304,13 +304,13 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 	}
 	else
 	{
-		auto rotA = quatToRot(a.rotation);
+		auto rotA = a.rotation.getRotMat();
 		Mat4 scaleA;
 		scaleA.initScaling(a.scale.x, a.scale.y, a.scale.z);
 		Mat4 translateA;
 		translateA.initTranslation(a.position.x, a.position.y, a.position.z);
 
-		auto rotB = quatToRot(b.rotation);
+		auto rotB = b.rotation.getRotMat();
 		Mat4 scaleB;
 		scaleB.initScaling(b.scale.x, b.scale.y, b.scale.z);
 		Mat4 translateB;
@@ -318,8 +318,8 @@ CollisionInfo RigidBodySystemSimulator::getCollision(RigidBody &a, RigidBody &b)
 		collision = checkCollisionSAT(rotA*scaleA*translateA, rotB*scaleB*translateB);
 		collision.normalWorld *= -1;
 	}
-	/*if (collision.isValid)
-		std::cout << "Collision between " << a.name << " and " << b.name << " at " << collision.collisionPointWorld.toString() << std::endl;*/
+	if (collision.isValid)
+		std::cout << "Collision between " << a.name << " and " << b.name << " with normal " << collision.normalWorld << std::endl;
 	if (collision.isValid && lastPoint.x == 0)
 	{
 		lastPoint = collision.collisionPointWorld;
@@ -337,23 +337,23 @@ CollisionInfo RigidBodySystemSimulator::checkCollisionSphereCube(RigidBody &sphe
 	collision.depth = 0.0;
 	Vec3 sphereMiddleRtoBox = sphere.position - box.position;
 
-	Mat4 matBox = quatToRot(box.rotation).inverse();
+	Mat4 matBox = box.rotation.getRotMat().inverse();
 	//sphereMiddleRtoBox = matBox * (sphereMiddleRtoBox);
 	sphereMiddleRtoBox = rotate(inverse(box.rotation),sphereMiddleRtoBox);
 	Vec3 distVec = sphereMiddleRtoBox.getAbsolutes() - (box.scale/2);
 	distVec = distVec.maximize(Vec3(0.));
-	if (norm(distVec) < sphere.scale.x)
+	if (norm(distVec) <= sphere.scale.x)
 	{
 		collision.depth = sphere.scale.x - norm(distVec)*.5;
 		collision.isValid = true;
 	//	distVec = quatToRot(box.rotation).transformVector(distVec * Vec3(sphereMiddleRtoBox.x < 0 ? -1 : 1, sphereMiddleRtoBox.y < 0 ? -1 : 1, sphereMiddleRtoBox.z < 0 ? -1 : 1));
-		distVec = rotate(cube.rotation,distVec*sign(sphereMiddleRtoBox));
+		distVec = rotate(box.rotation,distVec*sign(sphereMiddleRtoBox));
 		collision.collisionPointWorld = sphere.position - distVec;
-		collision.normalWorld = normalize(distVec);
+		collision.normalWorld = getNormalized(distVec);
+		std::cout << collision.normalWorld << std::endl;
 	}
+	std::cout << collision.normalWorld << std::endl;
 	return collision;
-    }
-
 }
 
 void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, CollisionInfo &ci)
