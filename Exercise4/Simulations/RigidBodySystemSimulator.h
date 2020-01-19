@@ -90,15 +90,17 @@ private:
 	Point2D m_oldtrackmouse;
 	
 	double netMass = 1.0;
+	double netSegments = 5.;
 	double gravitation = 1.0;
 	double ballMass = 10;
 	double ballScale = 1;
 	double timeStep = 0.01;
 	double elasticity = 0.9;
 	double stiffness = 5.;
+	double damping = 0.1;
 
 	double basketScale = 1.0;
-	int basketSegmnets = 50;
+	int basketSegmnets = 10;
 
 	double throwVelocityMin = 1000;
 	double throwVelocityMax = 6000;
