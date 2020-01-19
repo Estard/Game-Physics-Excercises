@@ -98,6 +98,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 	this->DUC = DUC;
 	rigidBodies.clear();
+	springs.clear();
 
 	TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_DOUBLE, &gravitation, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep0", NULL);

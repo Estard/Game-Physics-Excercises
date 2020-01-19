@@ -77,7 +77,6 @@ private:
 	Vec3 m_externalForce;
 	std::vector<RigidBody> rigidBodies;
 	std::vector<Spring> springs;
-	std::vector<Vec3> leap;
 
 	Mat4 calcInvInertiaSphere(double radius, double mass, bool solid = true);
 	Mat4 calcInvInertiaCube(Vec3 size, double mass);
