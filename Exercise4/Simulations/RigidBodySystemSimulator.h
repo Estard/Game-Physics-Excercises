@@ -63,7 +63,6 @@ public:
 	CollisionInfo checkCollisionSphereCube(RigidBody &sphere, RigidBody &box);
 
 	void addBasket(Vec3 position, double scale, int segments);
-
 	void addNet(Vec3 position, double scale, int segments);
 	void addSpring(int mp, int mp2);
 
@@ -99,5 +98,10 @@ private:
 
 	double basketScale = 1.0;
 	int basketSegmnets = 50;
+
+	double throwVelocityMin = 1.0;
+	double throwVelocityMax = 6.0;
+	double throwVelocityWindUp = 5.0;
+
 	};
 #endif
