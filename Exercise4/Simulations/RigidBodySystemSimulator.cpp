@@ -52,6 +52,11 @@ Vec3 sign(Vec3 &v)
 	return sign;
 }
 
+bool isBall(RigidBody& rb)
+{
+	return (rb.name.compare("Ball") == 0);
+}
+
 
 Mat4 RigidBodySystemSimulator::calcInvInertiaCube(Vec3 size, double mass)
 {
@@ -95,7 +100,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	TwAddVarRW(DUC->g_pTweakBar, "Gravitation", TW_TYPE_DOUBLE, &gravitation, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep0", NULL);
 
-	TwAddButton(DUC->g_pTweakBar, "Remove balls", removeBasketballsCallback, NULL, NULL);
+	TwAddButton(DUC->g_pTweakBar, "Remove balls", removeBasketballsCallback, &rigidBodies, NULL);
 	TwAddVarRW(DUC->g_pTweakBar, "Ball Mass", TW_TYPE_DOUBLE, &ballMass, "min=0.001 max=100");
 	TwAddVarRW(DUC->g_pTweakBar, "Ball Scale", TW_TYPE_DOUBLE, &ballScale, "min=0.001 max=100");
 	TwAddVarRW(DUC->g_pTweakBar, "Elasticity", TW_TYPE_DOUBLE, &elasticity, "min=0.0 max=1.0");
@@ -133,7 +138,7 @@ void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateConte
 		if (rb.isSphere) {
 			DUC->drawSphere(rb.position, Vec3(rb.scale.x));
 		}
-		else if (rb.name.compare("Floor"))
+		else
 		{
 			auto rot = rb.rotation.getRotMat();
 			Mat4 scale;
@@ -211,7 +216,7 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 
 
 
-		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", true, false);
+		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball", true, false);
 		std::cout << "Spawned Ball at: " << f_spawnPos.x << "|" << f_spawnPos.y << "|" << f_spawnPos.z << "\n";
 		
 		// Fish for reference to our rb since addRigidBody doesnt return a reference to the rb created
@@ -415,6 +420,5 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 
 // UI Callback Methods
 void TW_CALL RigidBodySystemSimulator::removeBasketballsCallback(void* optionalData) {
-	// TODO: Implement this lateron
-	std::cout << "TODO: Implement deleting of Basketballs\n";
+	std::remove(optionalData.begin(), rigidBodies.end(), isBall);
 }
