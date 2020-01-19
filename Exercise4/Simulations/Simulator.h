@@ -61,8 +61,9 @@ public:
 	/*
 	this function is used to receive the input from the mouse
 	input x,y: the click position in pixels
+	input duration: the time the click was held down
 	*/
-	virtual void onClick(int x, int y) = 0;
+	virtual void onClick(int x, int y, int duration) = 0;
 
 	/*
 	this function is used to receive the input from the mouse

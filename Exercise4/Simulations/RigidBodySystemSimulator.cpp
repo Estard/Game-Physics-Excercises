@@ -92,7 +92,7 @@ void RigidBodySystemSimulator::initScene()
 	addBasket(Vec3(0, 0.5, 2), basketScale, basketSegmnets);
 
 	addRigidBody(Vec3(0, -1, 0), Vec3(200, 0.001, 200), netMass, "Floor", false, true);
-	addRigidBody(Vec3(0.9, 2, 2), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", false);
+	//addRigidBody(Vec3(0.9, 2, 2), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", false);
 	//addRigidBody(Vec3(0, -0.5, 0), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", false, true);
 }
 
@@ -170,7 +170,33 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 	}
 }
 
-void RigidBodySystemSimulator::onClick(int x, int y) {
+void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
+	std::cout << "Click took " << duration << "ms\n";
+	if (x > 217 || y > 338) // shitty filtering of clicks on the tweakbar
+	{
+		DirectX::XMVECTOR camPos = DUC->g_camera.GetEyePt();
+		DirectX::XMVECTOR viewPos = DUC->g_camera.GetLookAtPt();
+		DirectX::XMVECTOR viewDir = viewPos - camPos;
+		viewDir = DirectX::XMVector3Normalize(viewDir);
+
+		DirectX::XMVECTOR spawnPos = camPos + 2.0 * viewDir;
+		
+		// XMVector elements cant be accessed, copy to float4
+		XMFLOAT3 f_spawnPos;    
+		XMStoreFloat3(&f_spawnPos, spawnPos);
+
+
+
+		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", true, false);
+		std::cout << "Spawned Ball at: " << f_spawnPos.x << "|" << f_spawnPos.y << "|" << f_spawnPos.z << "\n";
+		
+		// Fish for reference to our rb since addRigidBody doesnt return a reference to the rb created
+		RigidBody& rb = rigidBodies[rigidBodies.size() - 1];
+
+		// applyForceOnBody(rb, rb.position, 20000);
+		rb.linearVelocity =  viewDir * duration / 1000;
+
+	}
 }
 
 void RigidBodySystemSimulator::onMouse(int x, int y) {
