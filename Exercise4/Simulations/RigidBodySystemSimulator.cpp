@@ -255,15 +255,15 @@ void RigidBodySystemSimulator::applyForces()
 		RigidBody& m2 = rigidBodies[sp.massPoint2];
 		double lengthDiff = norm(m1.position - m2.position) - sp.initialLength;
 		double totalForce = stiffness * lengthDiff;
-		Vec3 dir = getNormalized(m2.position - m1.position);
-		applyForceOnBody(m1, m1.position, dir * totalForce);
+		Vec3 dir = getNormalized(m1.position - m2.position);
+		applyForceOnBody(m1, m1.position, -dir * totalForce);
 		applyForceOnBody(m2, m2.position, dir * totalForce);
 	}
 }
 
 void RigidBodySystemSimulator::applyForceOnBody(RigidBody &rb, Vec3 loc, Vec3 force)
 {
-	rb.force += force;
+	rb.force += force - (1. -elasticity) * rb.linearVelocity;
 	rb.torque += cross(loc - rb.position, force);
 }
 
