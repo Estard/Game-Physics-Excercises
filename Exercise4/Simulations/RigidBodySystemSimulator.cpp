@@ -420,5 +420,7 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 
 // UI Callback Methods
 void TW_CALL RigidBodySystemSimulator::removeBasketballsCallback(void* optionalData) {
-	std::remove(optionalData.begin(), rigidBodies.end(), isBall);
+
+	std::vector<RigidBody>& rigidBodies = static_cast<std::vector<RigidBody>*>(optionalData);
+	std::remove(rigidBodies.begin(), rigidBodies.end(), isBall);
 }
