@@ -120,7 +120,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Min", TW_TYPE_DOUBLE, &throwVelocityMin, "");
 	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Max", TW_TYPE_DOUBLE, &throwVelocityMax, "");
-	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Windup", TW_TYPE_DOUBLE, &throwVelocityWindUp, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Windup", TW_TYPE_DOUBLE, &throwVelocityWindUp, "min=0.0001");
 	TwAddSeparator(DUC->g_pTweakBar, "sep4", NULL);
 	initScene();
 	}
@@ -232,19 +232,21 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 		XMFLOAT3 f_spawnPos;    
 		XMStoreFloat3(&f_spawnPos, spawnPos);
 
-
-
 		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball", true, false);
 		std::cout << "Spawned Ball at: " << f_spawnPos.x << "|" << f_spawnPos.y << "|" << f_spawnPos.z;
 		
 		// Fish for reference to our rb since addRigidBody doesnt return a reference to the rb created
 		RigidBody& rb = rigidBodies[rigidBodies.size() - 1];
 
-		double velocityMul = throwVelocityMin + static_cast<double>(duration) / static_cast<double>(1000.0f * 1.0f / throwVelocityWindUp);
+		double velocityMul = throwVelocityMin + static_cast<double>(duration) * throwVelocityWindUp;
 		velocityMul = min(throwVelocityMax, velocityMul);
-		std::cout << " with velocity " << velocityMul << "\n";
-		rb.linearVelocity = viewDir * velocityMul;
 
+		//rb.linearVelocity = viewDir * velocityMul;
+		viewDir = viewDir * velocityMul;
+		XMFLOAT3 v_force;
+		XMStoreFloat3(&v_force, viewDir);
+		applyForceOnBody(rb, Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(v_force.x, v_force.y, v_force.z));
+		std::cout << " with force " << v_force.x << "|" << v_force.y << "|" << v_force.z;
 	}
 }
 

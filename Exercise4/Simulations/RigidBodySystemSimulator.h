@@ -102,8 +102,8 @@ private:
 	double basketScale = 1.0;
 	int basketSegmnets = 10;
 
-	double throwVelocityMin = 1.0;
-	double throwVelocityMax = 6.0;
+	double throwVelocityMin = 1000;
+	double throwVelocityMax = 6000;
 	double throwVelocityWindUp = 5.0;
 
 	};
