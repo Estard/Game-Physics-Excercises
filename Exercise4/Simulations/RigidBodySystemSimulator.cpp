@@ -414,8 +414,8 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 	if(!b.isStatic)
 		b.position -= (ci.normalWorld * ci.depth) / (a.isStatic ? 1 : 2);
 
-	a.linearVelocity += (a.isStatic ? Vec3(0.) : (impulseNormal / a.mass));
-	b.linearVelocity -= (b.isStatic ? Vec3(0.) : (impulseNormal / b.mass));
+	a.leapVelocity += (a.isStatic ? Vec3(0.) : (impulseNormal / a.mass));
+	b.leapVelocity -= (b.isStatic ? Vec3(0.) : (impulseNormal / b.mass));
 
 	a.angularMomentum += (a.isStatic ? Vec3(0.) : cross(middleAToPoint, impulseNormal));
 	b.angularMomentum -= (b.isStatic ? Vec3(0.) : cross(middleBToPoint, impulseNormal));
