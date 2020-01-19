@@ -418,6 +418,36 @@ void RigidBodySystemSimulator::addBasket(Vec3 position, double scale, int segmen
 	addRigidBody(wall.position, wall.scale, netMass, "wall", false , true);
 }
 
+void RigidBodySystemSimulator::addNet(Vec3 position, double scale, int segments) {
+	int offset = rigidBodies.size();
+	float angle = 2. * M_PI / (double)segments;
+	for (int j = 0; j < 5; j++) {
+		for (int i = 0; i < ((segments >= 4) ? segments : 4); i++) {
+			RigidBody rb{};
+			rb.position = position + Vec3(0., -angle * j * scale, 0.)
+				+ Vec3(1 * scale, 0., 0.) * sin(angle * i + (((j % 2) != 0) ? (angle / 2) : 0))
+				+ Vec3(0., 0., 1 * scale) * cos(angle * i + (((j % 2) != 0) ? (angle / 2) : 0));
+			rb.scale = scale * Vec3(.1, .1, .1);
+			addRigidBody(rb.position, Vec3(0.03, 0, 0), netMass, "net " + std::to_string(i), true, j == 0);
+			if (j != 0) {//all except top row add \  /
+				addSpring(offset + i + (j - 1) * segments, offset + i + j * segments);
+				addSpring(offset + ((j % 2) == 0) ? (i - 1 + segments) % segments : (i + 1) % segments + (j - 1) * segments, offset + i + j * segments);
+			}
+			if (i != 0) {//all except 1st of row add:  <-
+				addSpring(offset + i + (j * segments) - 1, offset + i + j * segments);
+			}
+			if (i == segments - 1) {//for the last in row, add ->
+				addSpring(offset + i + (j * segments) - (segments - 1), offset + i + j * segments);
+			}
+		}
+	}
+}
+
+void RigidBodySystemSimulator::addSpring(int mP1, int mP2) {
+	Spring s = { mP1,mP2, sqrt(rigidBodies[mP1].position.squaredDistanceTo(rigidBodies[mP2].position)) };
+	springs.push_back(s);
+}
+
 // UI Callback Methods
 void TW_CALL RigidBodySystemSimulator::removeBasketballsCallback(void* optionalData) {
 
