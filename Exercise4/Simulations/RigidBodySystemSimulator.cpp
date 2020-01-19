@@ -205,7 +205,7 @@ void RigidBodySystemSimulator::simulateTimestep(float timeStep)
 		if(!rb.isStatic)
 			integrate(rb);
 	}
-
+	bool netCollision = false;
 	for (int i = 0; i < rigidBodies.size()-1; i++)
 	{
 		for (int j = i + 1; j < rigidBodies.size(); j++)
@@ -229,8 +229,8 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 		DirectX::XMVECTOR spawnPos = camPos + 2.0 * viewDir;
 		
 		// XMVector elements cant be accessed, copy to float3
-		DirectX::XMFLOAT3 f_spawnPos;    
-		DirectX::XMStoreFloat3(&f_spawnPos, spawnPos);
+		XMFLOAT3 f_spawnPos;    
+		XMStoreFloat3(&f_spawnPos, spawnPos);
 
 		addRigidBody(Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(0.5, 0.2, 0.5), ballMass, "Ball", true, false);
 		std::cout << "Spawned Ball at: " << f_spawnPos.x << "|" << f_spawnPos.y << "|" << f_spawnPos.z;
@@ -243,8 +243,8 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 
 		//rb.linearVelocity = viewDir * velocityMul;
 		viewDir = viewDir * velocityMul;
-		DirectX::XMFLOAT3 v_force;
-		DirectX::XMStoreFloat3(&v_force, viewDir);
+		XMFLOAT3 v_force;
+		XMStoreFloat3(&v_force, viewDir);
 		applyForceOnBody(rb, Vec3(f_spawnPos.x, f_spawnPos.y, f_spawnPos.z), Vec3(v_force.x, v_force.y, v_force.z));
 		std::cout << " with force " << v_force.x << "|" << v_force.y << "|" << v_force.z;
 	}
@@ -388,8 +388,8 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 	Vec3 middleAToPoint = ci.collisionPointWorld - a.position;
 	Vec3 middleBToPoint = ci.collisionPointWorld - b.position;
 
-	Vec3 velA = a.linearVelocity + cross(a.angularVelocity, middleAToPoint);
-	Vec3 velB = b.linearVelocity + cross(b.angularVelocity, middleBToPoint);
+	Vec3 velA = a.leapVelocity + (a.isSphere ? Vec3(0.) : cross(a.angularVelocity, middleAToPoint));
+	Vec3 velB = b.leapVelocity + (b.isSphere ? Vec3(0.) : cross(b.angularVelocity, middleBToPoint));
 
 	Vec3 vrel = (velA - velB) * (-(1.0 + elasticity));
 
@@ -417,9 +417,9 @@ void RigidBodySystemSimulator::resolveCollision(RigidBody &a,RigidBody &b, Colli
 	Vec3 impulseNormal = impulse * ci.normalWorld;
 	
 	if(!a.isStatic)
-		a.position += (ci.normalWorld * ci.depth)  * (b.isStatic ? 2 : 1);
+		a.position += (ci.normalWorld * ci.depth)  / (b.isStatic ? 1 : 2);
 	if(!b.isStatic)
-		b.position -= (ci.normalWorld * ci.depth) * (a.isStatic ? 2 : 1);
+		b.position -= (ci.normalWorld * ci.depth) / (a.isStatic ? 1 : 2);
 
 	a.leapVelocity += (a.isStatic ? Vec3(0.) : (impulseNormal / a.mass));
 	b.leapVelocity -= (b.isStatic ? Vec3(0.) : (impulseNormal / b.mass));
