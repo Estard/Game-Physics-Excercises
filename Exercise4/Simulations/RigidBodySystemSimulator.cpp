@@ -117,9 +117,9 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	TwAddVarRW(DUC->g_pTweakBar, "Basket Scale", TW_TYPE_DOUBLE, &basketScale, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep3", NULL);
 
-	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Min", TW_TYPE_DOUBLE, &throwVelocityMin, "");
-	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Max", TW_TYPE_DOUBLE, &throwVelocityMax, "");
-	TwAddVarRW(DUC->g_pTweakBar, "Throw Velocity Windup", TW_TYPE_DOUBLE, &throwVelocityWindUp, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Throw Force Min", TW_TYPE_DOUBLE, &throwForceMin, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Throw Force Max", TW_TYPE_DOUBLE, &throwForceMax, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Throw Force Windup", TW_TYPE_DOUBLE, &throwForceWindUp, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep4", NULL);
 	initScene();
 	}
@@ -283,8 +283,8 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 		// Fish for reference to our rb since addRigidBody doesnt return a reference to the rb created
 		RigidBody& rb = rigidBodies[rigidBodies.size() - 1];
 
-		double velocityMul = throwVelocityMin + static_cast<double>(duration) * throwVelocityWindUp;
-		velocityMul = min(throwVelocityMax, velocityMul);
+		double velocityMul = throwForceMin + static_cast<double>(duration) * throwForceWindUp;
+		velocityMul = min(throwForceMax, velocityMul);
 
 		//rb.linearVelocity = viewDir * velocityMul;
 		viewDir = viewDir * velocityMul;
