@@ -252,12 +252,14 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 		rx = rx * 2 - 1;
 		ry = ry * 2 - 1;
 
-		XMMATRIX rotationMat = XMMatrixRotationAxis(XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), 90 * rx);
-		XMVECTOR sideDir = XMVector3Transform(viewDir, rotationMat);
+		XMMATRIX rotationMatX = XMMatrixRotationAxis(XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), 90);
+		XMMATRIX rotationMatY = XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f), 90);
+		XMVECTOR sideDir = XMVector3Transform(viewDir, rotationMatX);
+		XMVECTOR upDir = XMVector3Transform(viewDir, rotationMatY);
 		sideDir = XMVector3Normalize(sideDir);
-		std::cout << rx << " , " << ry << std::endl;
-		//XMVECTOR spawnOffset = Vec3(rx, ry, 0).toDirectXVector();
-		spawnPos += sideDir;
+		upDir = XMVector3Normalize(upDir);
+		spawnPos += rx * sideDir;
+		spawnPos += ry * upDir;
 
 
 		// XMVector elements cant be accessed, copy to float3
