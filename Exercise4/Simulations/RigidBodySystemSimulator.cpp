@@ -126,7 +126,19 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 void RigidBodySystemSimulator::initScene()
 {
-	addBasket(Vec3(0, -1.5, 1.5), basketScale, basketSegmnets);
+	switch (m_iTestCase)
+	{
+	case 0:
+		addBasket(Vec3(0, -1.5, 1.5), basketScale, basketSegmnets);
+		break;
+	case 1:
+		netSegments = 15;
+		stiffness = 50;
+		netMass = 5;
+		break;
+	default:
+		break;
+	}
 	addNet(Vec3(0, -1.6, 1.5), basketScale, netSegments);
 
 	addRigidBody(Vec3(0, -8, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
