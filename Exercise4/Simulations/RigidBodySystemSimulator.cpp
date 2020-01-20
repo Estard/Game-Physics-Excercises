@@ -129,8 +129,8 @@ void RigidBodySystemSimulator::initScene()
 	addBasket(Vec3(0, -1.5, 1.5), basketScale, basketSegmnets);
 	addNet(Vec3(0, -1.6, 1.5), basketScale, netSegments);
 
-	addRigidBody(Vec3(0, -5, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
-	addRigidBody(Vec3(0, -1, .9), Vec3(basketScale - ballScale / 4., -.5, basketScale - ballScale / 4.), 1, "hitzone", false, true);
+	addRigidBody(Vec3(0, -8, 0), Vec3(200, 0.1, 200), netMass, "Floor", false, true);
+	addRigidBody(Vec3(0, -1.5, 1.5), Vec3(basketScale - ballScale / 4., .1, basketScale - ballScale / 4.), 1, "hitzone", false, true);
 	//addRigidBody(Vec3(0.9, 3, 1.8), Vec3(0.3, 0.5, 0.5), ballMass, "Ball", true);
 	//addRigidBody(Vec3(0, -0.5, 0), Vec3(0.5, 0.2, 0.5), ballMass, "Ball1", false, true);
 }
@@ -150,7 +150,7 @@ void RigidBodySystemSimulator::drawFrame(ID3D11DeviceContext* pd3dImmediateConte
 		if (rb.isSphere) {
 			DUC->drawSphere(rb.position, Vec3(rb.scale.x));
 		}
-		else if (rb.name.compare("hitzone") != 0)
+		else //if (rb.name.compare("hitzone") != 0)
 		{
 			auto rot = rb.rotation.getRotMat();
 			Mat4 scale;
