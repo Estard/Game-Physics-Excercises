@@ -237,20 +237,29 @@ void RigidBodySystemSimulator::onClick(int x, int y, int duration) {
 	// Logic for throwing balls
 	if (x > 250 || y > 500) // shitty filtering of clicks on the tweakbar
 	{
+		// Get Camera Vectors
 		XMVECTOR camPos = DUC->g_camera.GetEyePt();
 		XMVECTOR viewPos = DUC->g_camera.GetLookAtPt();
 		XMVECTOR viewDir = viewPos - camPos;
-		viewDir = DirectX::XMVector3Normalize(viewDir);
-		double rx = (double)x / -(DUC->g_camera.width * 2);
-		double ry = (double)y / -(DUC->g_camera.height * 2);
-		rx -= 1;
-		ry -= 1;
-
-		std::cout << rx << " , " << ry << std::endl;
+		viewDir = XMVector3Normalize(viewDir);
 
 		XMVECTOR spawnPos = camPos + 2.0 * viewDir;
-		XMVECTOR spawnOffset = Vec3(rx, ry, 0).toDirectXVector();
-		//spawnPos += Vec3(rx, ry, z).toDirectXVector();
+
+		// Offset Spawn Position depending on mouse pos on screen
+		double rx = (double)x / (DUC->g_camera.width);
+		double ry = (double)y / (DUC->g_camera.height);
+
+		rx = rx * 2 - 1;
+		ry = ry * 2 - 1;
+
+		XMMATRIX rotationMat = XMMatrixRotationAxis(XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), 90 * rx);
+		XMVECTOR sideDir = XMVector3Transform(viewDir, rotationMat);
+		sideDir = XMVector3Normalize(sideDir);
+		std::cout << rx << " , " << ry << std::endl;
+		//XMVECTOR spawnOffset = Vec3(rx, ry, 0).toDirectXVector();
+		spawnPos += sideDir;
+
+
 		// XMVector elements cant be accessed, copy to float3
 		XMFLOAT3 f_spawnPos;    
 		XMStoreFloat3(&f_spawnPos, spawnPos);
