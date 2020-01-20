@@ -102,9 +102,9 @@ private:
 	double basketScale = 1.0;
 	int basketSegmnets = 10;
 
-	double throwVelocityMin = 1000;
-	double throwVelocityMax = 6000;
-	double throwVelocityWindUp = 5.0;
+	double throwForceMin = 1000;
+	double throwForceMax = 6000;
+	double throwForceWindUp = 5.0;
 
 	int anzahlBall = 0;
 	int score = 0;
