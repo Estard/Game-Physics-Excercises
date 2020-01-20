@@ -51,7 +51,7 @@ Vec3 sign(Vec3 &v)
 
 bool isBall(RigidBody& rb)
 {
-	return (rb.name.compare("Ball") == 0);
+	return (rb.name.substr(0, 4).compare("Ball") == 0);
 }
 
 
@@ -102,19 +102,19 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 	TwAddSeparator(DUC->g_pTweakBar, "sep0", NULL);
 
 	TwAddButton(DUC->g_pTweakBar, "Remove balls", removeBasketballsCallback, this, NULL);
-	TwAddVarRW(DUC->g_pTweakBar, "Ball Mass", TW_TYPE_DOUBLE, &ballMass, "min=0.001 max=100");
-	TwAddVarRW(DUC->g_pTweakBar, "Ball Scale", TW_TYPE_DOUBLE, &ballScale, "min=0.001 max=100");
-	TwAddVarRW(DUC->g_pTweakBar, "Elasticity", TW_TYPE_DOUBLE, &elasticity, "min=0.0 max=1.0");
+	TwAddVarRW(DUC->g_pTweakBar, "Ball Mass", TW_TYPE_DOUBLE, &ballMass, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Ball Scale", TW_TYPE_DOUBLE, &ballScale, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Elasticity", TW_TYPE_DOUBLE, &elasticity, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep1", NULL);
 
-	TwAddVarRW(DUC->g_pTweakBar, "Net Mass", TW_TYPE_DOUBLE, &netMass, "min=0.0001");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Mass", TW_TYPE_DOUBLE, &netMass, "");
 	TwAddVarRW(DUC->g_pTweakBar, "Net Stiffness", TW_TYPE_DOUBLE, &stiffness, "");
-	TwAddVarRW(DUC->g_pTweakBar, "Damping", TW_TYPE_DOUBLE, &damping, "min=0.0 max=1.0");
-	TwAddVarRW(DUC->g_pTweakBar, "Net Segments", TW_TYPE_INT32, &netSegments, "min=5 max=100");
+	TwAddVarRW(DUC->g_pTweakBar, "Damping", TW_TYPE_DOUBLE, &damping, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Net Segments", TW_TYPE_INT32, &netSegments, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep2", NULL);
 
-	TwAddVarRW(DUC->g_pTweakBar, "Basket Segments", TW_TYPE_INT32, &basketSegmnets, "min=1");
-	TwAddVarRW(DUC->g_pTweakBar, "Basket Scale", TW_TYPE_DOUBLE, &basketScale, "min=0.001");
+	TwAddVarRW(DUC->g_pTweakBar, "Basket Segments", TW_TYPE_INT32, &basketSegmnets, "");
+	TwAddVarRW(DUC->g_pTweakBar, "Basket Scale", TW_TYPE_DOUBLE, &basketScale, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep3", NULL);
 
 	TwAddVarRW(DUC->g_pTweakBar, "Throw Force Min", TW_TYPE_DOUBLE, &throwForceMin, "");
