@@ -119,7 +119,7 @@ void RigidBodySystemSimulator::initUI(DrawingUtilitiesClass* DUC)
 
 	TwAddVarRW(DUC->g_pTweakBar, "Throw Force Min", TW_TYPE_DOUBLE, &throwForceMin, "");
 	TwAddVarRW(DUC->g_pTweakBar, "Throw Force Max", TW_TYPE_DOUBLE, &throwForceMax, "");
-	TwAddVarRW(DUC->g_pTweakBar, "Throw Force Windup", TW_TYPE_DOUBLE, &throwForceWindUp, "min=0.0001");
+	TwAddVarRW(DUC->g_pTweakBar, "Throw Force Windup", TW_TYPE_DOUBLE, &throwForceWindUp, "");
 	TwAddSeparator(DUC->g_pTweakBar, "sep4", NULL);
 	initScene();
 	}
