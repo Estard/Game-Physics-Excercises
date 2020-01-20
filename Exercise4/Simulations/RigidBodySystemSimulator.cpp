@@ -51,7 +51,7 @@ Vec3 sign(Vec3 &v)
 
 bool isBall(RigidBody& rb)
 {
-	return (rb.name.compare("Ball") == 0);
+	return (rb.name.substr(0, 4).compare("Ball") == 0);
 }
 
 
